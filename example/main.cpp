@@ -1,6 +1,8 @@
 
 #include <stdio.h>
 #include <backcurl/BackCurl.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 /************************************ Test Scope ******************************************/
 
 
@@ -45,7 +47,7 @@ void doFuture() {
         printf("\r Future Sync ==%s ----%d", "Drawing Graphiccccc with count elapsed ", countUI++);
 
     }
-    
+
     if (!bcl::isProcessing(frp)) printf("no data process now, no more coming data\n\n" );
 
 }
@@ -87,19 +89,80 @@ void doRunOnUI () {
 }
 
 
+// File image upload and download
+struct MyFileAgent {
+    FILE *fd;
+    struct stat file_info;
+};
+
+size_t write_data(void *ptr, size_t size, size_t nmemb, void *userData) {
+    MyFileAgent* fAgent = (MyFileAgent*)userData;
+    size_t written = fwrite((FILE*)ptr, size, nmemb, fAgent->fd);
+    return written;
+}
+
+void doFileDownload() {
+    const char *url = "http://wallpapercave.com/wp/LmOgKXz.jpg";
+    char outfilename[] = "/Users/taymindis/Desktop/husky_dog_wallpaper.jpg";
+    bcl::execute<MyFileAgent>([&](bcl::Request & req) -> void {
+        MyFileAgent* fAgent = (MyFileAgent*)req.dataPtr;
+        fAgent->fd = fopen(outfilename, "wb"); /* open file to upload */
+        bcl::setOpts(req, CURLOPT_URL,url,
+        CURLOPT_WRITEDATA, fAgent->fd,
+        CURLOPT_WRITEFUNCTION, write_data,
+        CURLOPT_FOLLOWLOCATION, 1L
+                    );
+    }, [&](bcl::Response & resp) {
+        printf("On UI === %s\n", resp.contentType.c_str());
+        fclose(resp.getBody<MyFileAgent>()->fd);
+    });
+
+
+}
+
+
+
+
+// void doFileUpload() {
+//     double speed_upload, total_time;
+//     bcl::executeAsync<MyFileAgent>([&file_info](bcl::Request & req) -> void {
+//          MyFileAgent* fAgent = (MyFileAgent*)req.dataPtr;
+//          fAgent->fd = fopen("debugit", "rb"); /* open file to upload */
+//         if (!fAgent->fd)
+//             return; /* can't continue */
+
+//         /* to get the file size */
+//         if (fstat(fileno(fAgent->fd), &fAgent->file_info) != 0)
+//             return; /* can't continue */
+
+//         bcl::setOpts(req, CURLOPT_URL , "http://www.dropbox.com/....",
+//         CURLOPT_UPLOAD, 1L
+//         CURLOPT_READDATA, req.dataPtr,
+//         CURLOPT_INFILESIZE_LARGE, (curl_off_t)fAgent->file_info.st_size,
+//         CURLOPT_VERBOSE, 1L
+//                     );
+//     }, [&speed_upload, &fd](bcl::Response & resp) -> void {
+//         curl_easy_getinfo(resp.curl, CURLINFO_SPEED_UPLOAD, speed_upload);
+//         fprintf(stderr, "Speed: %.3f bytes/sec during %.3f seconds\n",
+//         speed_upload, resp.total_time);
+//         fclose(resp.getBody<MyFileAgent>()->fd);
+//     });
+// }
+
+
 // ** compile by g++ --std=c++11 main.cpp -lbackcurl -lcurl -pthread ** /
 
 int main()
 {
     bcl::init();
 
-    doSync();
+    // doSync();
 
-    doFuture();
+    // doFuture();
 
-    doRunOnUI();
+    // doRunOnUI();
 
-
+    doFileDownload();
     bcl::cleanUp();
 
     return 1;
