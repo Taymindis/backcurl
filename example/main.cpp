@@ -30,14 +30,14 @@ void doFuture() {
 
     frp = bcl::execFuture<std::string>(simpleGetOption);
     bool uiRunning = true;
-    while(uiRunning)  {
-        if(bcl::hasRequestedAndReady(frp)) {
+    while (uiRunning)  {
+        if (bcl::hasRequestedAndReady(frp)) {
             bcl::Response r = frp.get();
             printf("The data content is = %s\n", r.getBody<std::string>()->c_str());
             printf("Got Http Status code = %ld\n", r.code);
             printf("Got Content Type = %s\n", r.contentType.c_str());
             printf("Total Time Consume = %f\n", r.totalTime);
-            printf("has Error = %s\n", !r.error.empty()?"Yes":"No");
+            printf("has Error = %s\n", !r.error.empty() ? "Yes" : "No");
 
             // Exit App
             uiRunning = false;
@@ -46,18 +46,13 @@ void doFuture() {
 
     }
     
-        
-    
-
-  
-
-    if(!bcl::isProcessing(frp)) printf("no data process now, no more coming data\n\n" );
+    if (!bcl::isProcessing(frp)) printf("no data process now, no more coming data\n\n" );
 
 }
 
 void doGuiWork() {
     printf("\r %s --- %d", "Drawing thousand Pieces of Color with count elapsed ", countUI++);
-    
+
 
 }
 
@@ -97,7 +92,7 @@ void doRunOnUI () {
 int main()
 {
     bcl::init();
-    
+
     doSync();
 
     doFuture();
