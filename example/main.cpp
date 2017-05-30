@@ -20,7 +20,6 @@ void doSync() {
     bcl::execute<std::string>(simpleGetOption, [&](bcl::Response & resp) {
         std::string ret =  std::string(resp.getBody<std::string>()->c_str());
         printf("Sync === %s\n", ret.c_str());
-        return resp;
     });
 
 }
