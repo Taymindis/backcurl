@@ -101,3 +101,39 @@ int main() {
 }
 ```
 
+
+## Set Opts in 1 line to customized request
+```
+bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
+                 CURLOPT_FOLLOWLOCATION, 1L,
+                 CURLOPT_WRITEFUNCTION, &myMemoryCallBack,
+                 CURLOPT_WRITEDATA, req.dataPtr,
+                 CURLOPT_USERAGENT, "libcurl-agent/1.0",
+                 CURLOPT_RANGE, "0-200000"
+                );
+```                
+### for e.g, proxy request, proxy authenthication Get, Post, Head, Put, Basic Auth, please refer to libcurl for more details : https://curl.haxx.se/libcurl/c/curl_easy_setopt.html
+
+
+
+
+## Set your http header in your request scope if needed, it is depended on libcurl CURLOPT_HTTPHEADER.
+```
+bcl::execute<myType>([&](bcl::Request &req) {
+        req.headers->emplace_back("Authorization", res::mySetting[MY_BASIC_AUTH].asString());
+
+        bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
+                 CURLOPT_FOLLOWLOCATION, 1L,
+                 CURLOPT_WRITEFUNCTION, &myMemoryCallBack,
+                 CURLOPT_WRITEDATA, req.dataPtr,
+                 CURLOPT_USERAGENT, "libcurl-agent/1.0",
+                 CURLOPT_RANGE, "0-200000"
+                );
+    }, [&](bcl::Response & resp) {
+        myType* ret =  resp.getBody<myType>();
+    });
+```
+
+
+
+
