@@ -71,7 +71,7 @@ void wrapResponse(bcl::Request &r, bcl::Response &resp) {
         resp.effectiveUrl = std::string(url);
 
     char *ct = NULL;
-    curl_easy_getinfo(r.curl, CURLINFO_EFFECTIVE_URL, &ct);
+    curl_easy_getinfo(r.curl, CURLINFO_CONTENT_TYPE, &ct);
     if (ct)
         resp.contentType = std::string(ct);
 
@@ -259,7 +259,7 @@ bcl::Response::~Response () {
 //     printf("Got Http Status code = %ld\n", r.code);
 //     printf("Got Error = %s\n", r.error.c_str());
 
-//     if(!bcl::hasDataProcess(frp)) printf("no data process now, no more coming data\n\n" );
+//     if(!bcl::isProcessing(frp)) printf("no data process now, no more coming data\n\n" );
 
 // }
 

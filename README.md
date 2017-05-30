@@ -51,7 +51,7 @@ int main() {
     printf("Got Http Status code = %ld\n", r.code);
     printf("Got Error = %s\n", r.error.c_str());
 
-    if(!bcl::hasDataProcess(frp)) printf("no data process now, no more coming data\n\n" );
+    if(!bcl::isProcessing(frp)) printf("no data process now, no more coming data\n\n" );
 
 ```    
 

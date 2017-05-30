@@ -63,7 +63,7 @@ add_custom_target(uninstall
 #-------------------
 # set common include folder for module
 #-------------------
-set(COMMON_INCLUDES ${PROJECT_SOURCE_DIR}/backcurl/header)
+set(COMMON_INCLUDES ${PROJECT_SOURCE_DIR}/backcurl-core/header)
 set(EXT_PROJECTS_DIR ${PROJECT_SOURCE_DIR}/../ext)
 
 #-------------------
@@ -76,7 +76,7 @@ set(EXT_PROJECTS_DIR ${PROJECT_SOURCE_DIR}/../ext)
 #add_library(${PROJECT_LIB_NAME} ${SRC_FILES})
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/ext/gtest)
-add_subdirectory(${PROJECT_SOURCE_DIR}/backcurl)
+add_subdirectory(${PROJECT_SOURCE_DIR}/backcurl-core)
 
 
 #-------------------

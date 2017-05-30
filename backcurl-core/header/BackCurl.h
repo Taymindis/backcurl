@@ -108,7 +108,7 @@ using FutureResponse = std::future<bcl::Response>;
 using FuturePromise = std::promise<bcl::Response>;
 
 bool isReady(FutureResponse const& f);
-inline bool hasDataProcess(FutureResponse const &f) {
+inline bool isProcessing(FutureResponse const &f) {
     return f.valid();
 }
 inline bool hasRequestedAndReady(FutureResponse const &f) {
