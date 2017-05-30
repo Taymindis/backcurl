@@ -93,10 +93,11 @@ int main() {
                  CURLOPT_RANGE, "0-200000"
                 );
 	}, [&](bcl::Response & resp) {
-        myType ret =  resp.getBody<myType>();
+        myType* ret =  resp.getBody<myType>();
     });
 
 
     bcl::cleanUp(); // clean up when no more using
 }
 ```
+
