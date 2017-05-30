@@ -87,7 +87,7 @@ int main() {
     bcl::execute<myType>([&](bcl::Request &req) {
     	bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
                  CURLOPT_FOLLOWLOCATION, 1L,
-                 CURLOPT_WRITEFUNCTION, &myOwnCallBack,
+                 CURLOPT_WRITEFUNCTION, &myMemoryCallBack,
                  CURLOPT_WRITEDATA, req.dataPtr,
                  CURLOPT_USERAGENT, "libcurl-agent/1.0",
                  CURLOPT_RANGE, "0-200000"
