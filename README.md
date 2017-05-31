@@ -66,7 +66,42 @@ bcl::FutureResponse frp;
 
 ### for run on ui and call back to Main thread
 ```
-//please see the example/main.cpp doRunOnUI method
+//derived from example/main.cpp
+void doGuiWork() {
+    printf("\r %s --- %d", "Drawing thousand Pieces of Color with count elapsed ", countUI++);
+}
+
+void doUpdate() {
+    bcl::LoopBackFire();
+}
+
+void doRunOnUI () {
+    bool gui_running = true;
+    std::cout << "Game is running thread: ";
+
+    bcl::executeOnUI<std::string>([](bcl::Request & req) -> void {
+        bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
+        CURLOPT_FOLLOWLOCATION, 1L,
+        CURLOPT_WRITEFUNCTION, &bcl::writeMemoryCallback,
+        CURLOPT_WRITEDATA, req.dataPtr,
+        CURLOPT_USERAGENT, "libcurl-agent/1.0",
+        CURLOPT_RANGE, "0-200000"
+                    );
+    }, [&](bcl::Response & resp) {
+        printf("On UI === %s\n", resp.getBody<std::string>()->c_str());
+        printf("Done , stop gui running with count ui %d\n", countUI );
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        gui_running = false;
+    });
+
+    while (gui_running) {
+        doGuiWork();
+        doUpdate();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000 / 16));
+    }
+}
+
+
 ```
 
 
