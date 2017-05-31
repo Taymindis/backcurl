@@ -103,17 +103,17 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, void *userData) {
 
 void doFileDownload() {
     const char *url = "http://wallpapercave.com/wp/LmOgKXz.jpg";
-    char outfilename[] = "/Users/taymindis/Desktop/husky_dog_wallpaper.jpg";
+    char outfilename[] = "husky_dog_wallpaper.jpeg";
     bcl::execute<MyFileAgent>([&](bcl::Request & req) -> void {
         MyFileAgent* fAgent = (MyFileAgent*)req.dataPtr;
-        fAgent->fd = fopen(outfilename, "wb"); /* open file to upload */
+        fAgent->fd = fopen(outfilename, "ab+");
         bcl::setOpts(req, CURLOPT_URL,url,
-        CURLOPT_WRITEDATA, fAgent->fd,
         CURLOPT_WRITEFUNCTION, write_data,
+        CURLOPT_WRITEDATA, req.dataPtr,
         CURLOPT_FOLLOWLOCATION, 1L
                     );
     }, [&](bcl::Response & resp) {
-        printf("On UI === %s\n", resp.contentType.c_str());
+        printf("Response content type = %s\n", resp.contentType.c_str());
         fclose(resp.getBody<MyFileAgent>()->fd);
     });
 
