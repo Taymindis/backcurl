@@ -13,19 +13,19 @@ sudo make install
 
 
 
-```
+```cpp
 int main() {
-	bcl::init(); // init when using
+    bcl::init(); // init when using
 
     bcl::execute<std::string>([&](bcl::Request &req) {
-    	bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
+        bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
                  CURLOPT_FOLLOWLOCATION, 1L,
                  CURLOPT_WRITEFUNCTION, &bcl::writeContentCallback,
                  CURLOPT_WRITEDATA, req.dataPtr,
                  CURLOPT_USERAGENT, "libcurl-agent/1.0",
                  CURLOPT_RANGE, "0-200000"
                 );
-	}, [&](bcl::Response & resp) {
+    }, [&](bcl::Response & resp) {
         std::string ret =  std::string(resp.getBody<std::string>()->c_str());
         printf("Sync === %s\n", ret.c_str());
     });
@@ -39,35 +39,35 @@ int main() {
 ## For future non blocking sync
 ### this is different with runOnUI method, you need to hold the FutureResponse in your mainthread and do verify bcl::hasRequestedAndReady(frp) for every update until the result is read
 
-```	
+```cpp
 bcl::FutureResponse frp;
 
-    frp = bcl::execFuture<std::string>(simpleGetOption);
-    bool uiRunning = true;
-    while (uiRunning)  {
-        if (bcl::hasRequestedAndReady(frp)) {
-            bcl::Response r = frp.get();
-            printf("The data content is = %s\n", r.getBody<std::string>()->c_str());
-            printf("Got Http Status code = %ld\n", r.code);
-            printf("Got Content Type = %s\n", r.contentType.c_str());
-            printf("Total Time Consume = %f\n", r.totalTime);
-            printf("has Error = %s\n", !r.error.empty() ? "Yes" : "No");
+frp = bcl::execFuture<std::string>(simpleGetOption);
+bool uiRunning = true;
+while (uiRunning)  {
+    if (bcl::hasRequestedAndReady(frp)) {
+        bcl::Response r = frp.get();
+        printf("The data content is = %s\n", r.getBody<std::string>()->c_str());
+        printf("Got Http Status code = %ld\n", r.code);
+        printf("Got Content Type = %s\n", r.contentType.c_str());
+        printf("Total Time Consume = %f\n", r.totalTime);
+        printf("has Error = %s\n", !r.error.empty() ? "Yes" : "No");
 
-            // Exit App
-            uiRunning = false;
-        }
-        printf("\r Future Sync ==%s ----%d", "Drawing Graphiccccc with count elapsed ", countUI++);
-
+        // Exit App
+        uiRunning = false;
     }
-    
-    if (!bcl::isProcessing(frp)) printf("no data process now, no more coming data\n\n" );
-```    
+    printf("\r Future Sync ==%s ----%d", "Drawing Graphiccccc with count elapsed ", countUI++);
+
+}
+
+if (!bcl::isProcessing(frp)) printf("no data process now, no more coming data\n\n" );
+```
 
 
 
 ## For run on ui and call back to Main thread, this need to be done by put `bcl::LoopBackFire();` in your update scope
-```
-//derived from example/main.cpp
+```cpp
+// Derived from example/main.cpp
 void doGuiWork() {
     printf("\r %s --- %d", "Drawing thousand Pieces of Color with count elapsed ", countUI++);
 }
@@ -101,22 +101,20 @@ void doRunOnUI () {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000 / 16));
     }
 }
-
-
 ```
 
 
 ## For different kind of data type request,  by default is std::string based
-```
+```cpp
 struct myType {
-	std::string s;
-	float f;
+    std::string s;
+    float f;
 };
 
 size_t myMemoryCallBack(void *contents, size_t size, size_t nmemb, void *contentWrapper) {
     size_t realsize = size * nmemb;
     myType *memBlock = (myType *)contentWrapper;
-    
+
     // do your jobs
 
     return realsize;
@@ -124,18 +122,17 @@ size_t myMemoryCallBack(void *contents, size_t size, size_t nmemb, void *content
 
 
 int main() {
-
-	bcl::init(); // init when using
+    bcl::init(); // init when using
 
     bcl::execute<myType>([&](bcl::Request &req) {
-    	bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
+        bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
                  CURLOPT_FOLLOWLOCATION, 1L,
                  CURLOPT_WRITEFUNCTION, &myMemoryCallBack,
                  CURLOPT_WRITEDATA, req.dataPtr,
                  CURLOPT_USERAGENT, "libcurl-agent/1.0",
                  CURLOPT_RANGE, "0-200000"
                 );
-	}, [&](bcl::Response & resp) {
+    }, [&](bcl::Response & resp) {
         myType* ret =  resp.getBody<myType>();
     });
 
@@ -146,7 +143,7 @@ int main() {
 
 
 ## Set Opts in 1 line to customized request
-```
+```cpp
 bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
                  CURLOPT_FOLLOWLOCATION, 1L,
                  CURLOPT_WRITEFUNCTION, &myMemoryCallBack,
@@ -154,14 +151,14 @@ bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
                  CURLOPT_USERAGENT, "libcurl-agent/1.0",
                  CURLOPT_RANGE, "0-200000"
                 );
-```                
+```
 ### for e.g, proxy request, proxy authenthication Get, Post, Head, Put, Basic Auth, please refer to libcurl for more details : https://curl.haxx.se/libcurl/c/curl_easy_setopt.html
 
 
 
 
 ## Set your http header in your request scope if needed, it is depended on libcurl CURLOPT_HTTPHEADER.
-```
+```cpp
 bcl::execute<myType>([&](bcl::Request &req) {
         req.headers->emplace_back("Authorization", res::mySetting[MY_BASIC_AUTH].asString());
 
@@ -180,7 +177,7 @@ bcl::execute<myType>([&](bcl::Request &req) {
 
 ## Download image
 ### this needed to be done by wrapped file in the struct or class so it will be auto free the object. However, fd stream need to be closed at response scope
-```
+```cpp
 struct MyFileAgent {
     FILE *fd;
     struct stat fileInfo;
@@ -205,34 +202,33 @@ const char *url = "http://wallpapercave.com/wp/LmOgKXz.jpg";
         printf("Response content type = %s\n", resp.contentType.c_str());
         fclose(resp.getBody<MyFileAgent>()->fd);
     });
-
 ```
 
 
 
 ## Get Image bytes into Memory
+```cpp
+bcl::execute<bcl::MemoryByte>([](bcl::Request & req) {
+    bcl::setOpts(req, CURLOPT_URL , "http://wallpapercave.com/wp/LmOgKXz.jpg",
+                 CURLOPT_FOLLOWLOCATION, 1L,
+                 CURLOPT_WRITEFUNCTION, &bcl::writeByteCallback,
+                 CURLOPT_WRITEDATA, req.dataPtr,
+                 CURLOPT_USERAGENT, "libcurl-agent/1.0",
+                 CURLOPT_RANGE, "0-20000000"
+                );
+}, [&](bcl::Response & resp) {
+    printf("Downloaded content 0x%02hx\n", (const unsigned char*)resp.getBody<bcl::MemoryByte>()->c_str());
+    printf("bcl::MemoryByte size is %ld\n", resp.getBody<bcl::MemoryByte>()->size());
+    double dl;
+    if (!curl_easy_getinfo(resp.curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &dl)) {
+        printf("Downloaded %.0f bytes\n", dl);
+    }
+    long headerSize;
+    if (!curl_easy_getinfo(resp.curl, CURLINFO_HEADER_SIZE, &headerSize)) {
+        printf("Downloaded header size %ld bytes\n", headerSize);
+    }
+});
 ```
-    bcl::execute<bcl::MemoryByte>([](bcl::Request & req) {
-        bcl::setOpts(req, CURLOPT_URL , "http://wallpapercave.com/wp/LmOgKXz.jpg",
-                     CURLOPT_FOLLOWLOCATION, 1L,
-                     CURLOPT_WRITEFUNCTION, &bcl::writeByteCallback,
-                     CURLOPT_WRITEDATA, req.dataPtr,
-                     CURLOPT_USERAGENT, "libcurl-agent/1.0",
-                     CURLOPT_RANGE, "0-20000000"
-                    );
-    }, [&](bcl::Response & resp) {
-        printf("Downloaded content 0x%02hx\n", (const unsigned char*)resp.getBody<bcl::MemoryByte>()->c_str());
-        printf("bcl::MemoryByte size is %ld\n", resp.getBody<bcl::MemoryByte>()->size());
-        double dl;
-        if (!curl_easy_getinfo(resp.curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &dl)) {
-            printf("Downloaded %.0f bytes\n", dl);
-        }
-        long headerSize;
-        if (!curl_easy_getinfo(resp.curl, CURLINFO_HEADER_SIZE, &headerSize)) {
-            printf("Downloaded header size %ld bytes\n", headerSize);
-        }
-    });
-```    
 
 
 
