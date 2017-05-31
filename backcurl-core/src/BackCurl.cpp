@@ -51,6 +51,26 @@ void cleanUp() {
     curl_global_cleanup();
 }
 
+// For image purpose
+size_t
+writeByteCallback(void *contents, size_t size, size_t nmemb, void *userp) {
+    size_t realsize = size * nmemb;
+    MemoryByte *memBlock = (MemoryByte *)userp;
+    memBlock->append((unsigned char*)contents, realsize);
+
+    return realsize;
+}
+
+// For Content
+size_t 
+writeContentCallback(void *contents, size_t size, size_t nmemb, void *contentWrapper) {
+    size_t realsize = size * nmemb;
+    std::string *memBlock = (std::string *)contentWrapper;
+    memBlock->append((char*)contents, realsize);
+
+    return realsize;
+}
+
 namespace internal {
 std::deque<std::function<void()>> _mainLoopTasks;
 std::mutex _tasks_mutex;
@@ -226,7 +246,7 @@ bcl::Response::~Response () {
 // void simpleGetOption(bcl::Request &req) {
 //     bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
 //                  CURLOPT_FOLLOWLOCATION, 1L,
-//                  CURLOPT_WRITEFUNCTION, &bcl::writeMemoryCallback,
+//                  CURLOPT_WRITEFUNCTION, &bcl::writeContentCallback,
 //                  CURLOPT_WRITEDATA, req.dataPtr,
 //                  CURLOPT_USERAGENT, "libcurl-agent/1.0",
 //                  CURLOPT_RANGE, "0-200000"
@@ -281,7 +301,7 @@ bcl::Response::~Response () {
 //     bcl::executeOnUI<std::string>([](bcl::Request & req) -> void {
 //         bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
 //         CURLOPT_FOLLOWLOCATION, 1L,
-//         CURLOPT_WRITEFUNCTION, &bcl::writeMemoryCallback,
+//         CURLOPT_WRITEFUNCTION, &bcl::writeContentCallback,
 //         CURLOPT_WRITEDATA, req.dataPtr,
 //         CURLOPT_USERAGENT, "libcurl-agent/1.0",
 //         CURLOPT_RANGE, "0-200000"

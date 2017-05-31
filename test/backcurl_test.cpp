@@ -8,7 +8,7 @@
 void simpleGetOption(bcl::Request &req) {
     bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
                  CURLOPT_FOLLOWLOCATION, 1L,
-                 CURLOPT_WRITEFUNCTION, &bcl::writeMemoryCallback,
+                 CURLOPT_WRITEFUNCTION, &bcl::writeContentCallback,
                  CURLOPT_WRITEDATA, req.dataPtr,
                  CURLOPT_USERAGENT, "libcurl-agent/1.0",
                  CURLOPT_RANGE, "0-200000"
@@ -63,7 +63,7 @@ void doRunOnUI () {
     bcl::executeOnUI<std::string>([](bcl::Request & req) -> void {
         bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
         CURLOPT_FOLLOWLOCATION, 1L,
-        CURLOPT_WRITEFUNCTION, &bcl::writeMemoryCallback,
+        CURLOPT_WRITEFUNCTION, &bcl::writeContentCallback,
         CURLOPT_WRITEDATA, req.dataPtr,
         CURLOPT_USERAGENT, "libcurl-agent/1.0",
         CURLOPT_RANGE, "0-200000"

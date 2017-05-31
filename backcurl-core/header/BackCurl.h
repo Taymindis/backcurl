@@ -106,6 +106,7 @@ void setOpts(bcl::Request &req, CURLoption a, OptType&& optType, CURLoption b,  
 
 using FutureResponse = std::future<bcl::Response>;
 using FuturePromise = std::promise<bcl::Response>;
+using MemoryByte = std::basic_string<unsigned char>;
 
 bool isReady(FutureResponse const& f);
 inline bool isProcessing(FutureResponse const &f) {
@@ -146,13 +147,11 @@ void __stream_close__(void *ptr, DataType *x) {
 }
 }
 
-size_t writeMemoryCallback(void *contents, size_t size, size_t nmemb, void *contentWrapper) {
-    size_t realsize = size * nmemb;
-    std::string *memBlock = (std::string *)contentWrapper;
-    memBlock->append((char*)contents, realsize);
+size_t 
+writeContentCallback(void *contents, size_t size, size_t nmemb, void *contentWrapper);
 
-    return realsize;
-}
+size_t
+writeByteCallback(void *contents, size_t size, size_t nmemb, void *userp);
 
 template <typename DataType>
 void execute(std::function<void(bcl::Request &req)> optsFilter, std::function<void(bcl::Response &resp)> responseCallback, bcl::internal::CALL_TYPE callType = internal::SYNC) {

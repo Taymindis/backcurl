@@ -4,24 +4,38 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 /************************************ Test Scope ******************************************/
-
-
 void simpleGetOption(bcl::Request &req) {
-    bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
+    bcl::setOpts(req, CURLOPT_URL , "http://wallpapercave.com/wp/LmOgKXz.jpg",
                  CURLOPT_FOLLOWLOCATION, 1L,
-                 CURLOPT_WRITEFUNCTION, &bcl::writeMemoryCallback,
+                 CURLOPT_WRITEFUNCTION, &bcl::writeContentCallback,
                  CURLOPT_WRITEDATA, req.dataPtr,
                  CURLOPT_USERAGENT, "libcurl-agent/1.0",
-                 CURLOPT_RANGE, "0-200000"
+                 CURLOPT_RANGE, "0-20000000"
                 );
 }
 
 int countUI = 0;
 
 void doSync() {
-    bcl::execute<std::string>(simpleGetOption, [&](bcl::Response & resp) {
-        std::string ret =  std::string(resp.getBody<std::string>()->c_str());
-        printf("Sync === %s\n", ret.c_str());
+    bcl::execute<bcl::MemoryByte>([](bcl::Request & req) {
+        bcl::setOpts(req, CURLOPT_URL , "http://wallpapercave.com/wp/LmOgKXz.jpg",
+                     CURLOPT_FOLLOWLOCATION, 1L,
+                     CURLOPT_WRITEFUNCTION, &bcl::writeByteCallback,
+                     CURLOPT_WRITEDATA, req.dataPtr,
+                     CURLOPT_USERAGENT, "libcurl-agent/1.0",
+                     CURLOPT_RANGE, "0-20000000"
+                    );
+    }, [&](bcl::Response & resp) {
+        printf("Downloaded content 0x%02hx\n", (const unsigned char*)resp.getBody<bcl::MemoryByte>()->c_str());
+        printf("bcl::MemoryByte size is %ld\n", resp.getBody<bcl::MemoryByte>()->size());
+        double dl;
+        if (!curl_easy_getinfo(resp.curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &dl)) {
+            printf("Downloaded %.0f bytes\n", dl);
+        }
+        long headerSize;
+        if (!curl_easy_getinfo(resp.curl, CURLINFO_HEADER_SIZE, &headerSize)) {
+            printf("Downloaded header size %ld bytes\n", headerSize);
+        }
     });
 
 }
@@ -69,7 +83,7 @@ void doRunOnUI () {
     bcl::executeOnUI<std::string>([](bcl::Request & req) -> void {
         bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
         CURLOPT_FOLLOWLOCATION, 1L,
-        CURLOPT_WRITEFUNCTION, &bcl::writeMemoryCallback,
+        CURLOPT_WRITEFUNCTION, &bcl::writeContentCallback,
         CURLOPT_WRITEDATA, req.dataPtr,
         CURLOPT_USERAGENT, "libcurl-agent/1.0",
         CURLOPT_RANGE, "0-200000"
@@ -107,7 +121,7 @@ void doFileDownload() {
     bcl::execute<MyFileAgent>([&](bcl::Request & req) -> void {
         MyFileAgent* fAgent = (MyFileAgent*)req.dataPtr;
         fAgent->fd = fopen(outfilename, "ab+");
-        bcl::setOpts(req, CURLOPT_URL,url,
+        bcl::setOpts(req, CURLOPT_URL, url,
         CURLOPT_WRITEFUNCTION, write_data,
         CURLOPT_WRITEDATA, req.dataPtr,
         CURLOPT_FOLLOWLOCATION, 1L
@@ -156,13 +170,13 @@ int main()
 {
     bcl::init();
 
-    // doSync();
+    doSync();
 
     // doFuture();
 
     // doRunOnUI();
 
-    doFileDownload();
+    // doFileDownload();
     bcl::cleanUp();
 
     return 1;
