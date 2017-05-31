@@ -142,5 +142,35 @@ bcl::execute<myType>([&](bcl::Request &req) {
 ```
 
 
+## Download image
+### this needed to be done by wrapped file in the struct or class so it will be auto free the object. However, fd stream need to be closed at response scope
+```
+struct MyFileAgent {
+    FILE *fd;
+    struct stat fileInfo;
+};
+
+size_t write_data(void *ptr, size_t size, size_t nmemb, void *userData) {
+    MyFileAgent* fAgent = (MyFileAgent*)userData;
+    size_t written = fwrite((FILE*)ptr, size, nmemb, fAgent->fd);
+    return written;
+}
+const char *url = "http://wallpapercave.com/wp/LmOgKXz.jpg";
+    char outfilename[] = "husky_dog_wallpaper.jpeg";
+    bcl::execute<MyFileAgent>([&](bcl::Request & req) -> void {
+        MyFileAgent* fAgent = (MyFileAgent*)req.dataPtr;
+        fAgent->fd = fopen(outfilename, "ab+");
+        bcl::setOpts(req, CURLOPT_URL,url,
+        CURLOPT_WRITEFUNCTION, write_data,
+        CURLOPT_WRITEDATA, req.dataPtr,
+        CURLOPT_FOLLOWLOCATION, 1L
+                    );
+    }, [&](bcl::Response & resp) {
+        printf("Response content type = %s\n", resp.contentType.c_str());
+        fclose(resp.getBody<MyFileAgent>()->fd);
+    });
+
+```
+
 
 
