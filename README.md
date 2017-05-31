@@ -210,3 +210,29 @@ const char *url = "http://wallpapercave.com/wp/LmOgKXz.jpg";
 
 
 
+## Get Image bytes into Memory
+```
+    bcl::execute<bcl::MemoryByte>([](bcl::Request & req) {
+        bcl::setOpts(req, CURLOPT_URL , "http://wallpapercave.com/wp/LmOgKXz.jpg",
+                     CURLOPT_FOLLOWLOCATION, 1L,
+                     CURLOPT_WRITEFUNCTION, &bcl::writeByteCallback,
+                     CURLOPT_WRITEDATA, req.dataPtr,
+                     CURLOPT_USERAGENT, "libcurl-agent/1.0",
+                     CURLOPT_RANGE, "0-20000000"
+                    );
+    }, [&](bcl::Response & resp) {
+        printf("Downloaded content 0x%02hx\n", (const unsigned char*)resp.getBody<bcl::MemoryByte>()->c_str());
+        printf("bcl::MemoryByte size is %ld\n", resp.getBody<bcl::MemoryByte>()->size());
+        double dl;
+        if (!curl_easy_getinfo(resp.curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &dl)) {
+            printf("Downloaded %.0f bytes\n", dl);
+        }
+        long headerSize;
+        if (!curl_easy_getinfo(resp.curl, CURLINFO_HEADER_SIZE, &headerSize)) {
+            printf("Downloaded header size %ld bytes\n", headerSize);
+        }
+    });
+```    
+
+
+
