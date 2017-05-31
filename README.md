@@ -106,7 +106,7 @@ void doRunOnUI () {
 ```
 
 
-## for different kind of data type request by default is std::string based
+## For different kind of data type request,  by default is std::string based
 ```
 struct myType {
 	std::string s;
