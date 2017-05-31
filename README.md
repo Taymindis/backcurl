@@ -36,7 +36,8 @@ int main() {
 ```
 
 
-### for future non blocking sync 
+## For future non blocking sync
+### this is different with runOnUI method, you need to hold the FutureResponse in your mainthread and do verify bcl::hasRequestedAndReady(frp) for every update until the result is read
 
 ```	
 bcl::FutureResponse frp;
