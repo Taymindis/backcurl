@@ -64,7 +64,7 @@ bcl::FutureResponse frp;
 
 
 
-### for run on ui and call back to Main thread
+## For run on ui and call back to Main thread, this need to be done by put `bcl::LoopBackFire();` in your update scope
 ```
 //derived from example/main.cpp
 void doGuiWork() {
