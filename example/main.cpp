@@ -5,7 +5,7 @@
 #include <fcntl.h>
 /************************************ Test Scope ******************************************/
 void simpleGetOption(bcl::Request &req) {
-    bcl::setOpts(req, CURLOPT_URL , "http://wallpapercave.com/wp/LmOgKXz.jpg",
+    bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
                  CURLOPT_FOLLOWLOCATION, 1L,
                  CURLOPT_WRITEFUNCTION, &bcl::writeContentCallback,
                  CURLOPT_WRITEDATA, req.dataPtr,
@@ -172,9 +172,9 @@ int main()
 
     doSync();
 
-    // doFuture();
+    doFuture();
 
-    // doRunOnUI();
+    doRunOnUI();
 
     // doFileDownload();
     bcl::cleanUp();
