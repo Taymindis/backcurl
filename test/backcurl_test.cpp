@@ -61,14 +61,16 @@ void doRunOnUI () {
     std::cout << "Game is running thread: ";
 
     bcl::executeOnUI<std::string>([](bcl::Request & req) -> void {
-        bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
-        CURLOPT_FOLLOWLOCATION, 1L,
+        bcl::setOpts(req, CURLOPT_URL , req.args[0].getStr,
+        CURLOPT_FOLLOWLOCATION, req.args[1].getLong,
         CURLOPT_WRITEFUNCTION, &bcl::writeContentCallback,
         CURLOPT_WRITEDATA, req.dataPtr,
-        CURLOPT_USERAGENT, "libcurl-agent/1.0",
-        CURLOPT_RANGE, "0-200000"
+        CURLOPT_USERAGENT, req.args[2].getStr,
+        CURLOPT_RANGE, req.args[3].getStr
                     );
-    }, [&](bcl::Response & resp) {
+    }, bcl::args("http://www.google.com", 1L, "libbackcurl-agent/1.0", "0-20000000"),  
+
+    [&](bcl::Response & resp) {
         printf("On UI === %s\n", resp.getBody<std::string>()->c_str());
         printf("Done , stop gui running with count ui %d\n", countUI );
         std::this_thread::sleep_for(std::chrono::milliseconds(500));

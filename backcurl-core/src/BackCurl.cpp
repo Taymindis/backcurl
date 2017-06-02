@@ -1,7 +1,5 @@
 //
 //  BackCurl.cpp
-//  cppTraining
-//
 //  Created by Taymindis Woon on 23/5/17.
 //  Copyright © 2017 Taymindis Woon. All rights reserved.
 //
@@ -13,14 +11,7 @@ namespace bcl {
 
 /** If you activate mainLoopCallBack, please make sure bcl::LoopBackFire on the loop thread, for e.g. UI thread **/
 void init() {
-    // std::function<void()> task(std::bind([](std::function<void(bcl::Response &resp)> callback, bcl::Response & resp) { callback(resp);}, bcl::internal::BackCurlLoopCallBackChecker, bcl::Response()));
-    // {
-    //     std::lock_guard<std::mutex> lock(internal::_tasks_mutex);
-    //     internal::_mainLoopTasks.push_back(std::move(task));
-    // }
-
     curl_global_init(CURL_GLOBAL_ALL);
-
 }
 
 void LoopBackFire() {
@@ -101,7 +92,7 @@ void wrapResponse(bcl::Request &r, bcl::Response &resp) {
 }
 
 
-/*** comment this pattern for study to understand that you can return bahavior right this :)  **/
+/*** comment this pattern for that you can return bahavior right this  **/
 //    template <typename DataType>
 //    auto __execute__(std::function<void(bcl::Request &req)> optsFilter, std::function<void(bcl::Response)> respFilter, CALL_TYPE,
 //                     DataType &chunk) -> Response<decltype(chunk)>

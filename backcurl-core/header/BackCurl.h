@@ -1,6 +1,5 @@
 //
-//  BackCurl.hpp
-//  cppTraining
+//  BackCurl.h
 //
 //  Created by Taymindis Woon on 23/5/17.
 //  Copyright © 2017 Taymindis Woon. All rights reserved.
@@ -36,21 +35,31 @@ namespace bcl {
 // Declaration ------------------
 
 using Headers = std::vector<std::pair<std::string, std::string>>;
+union mArg
+{
+    const char* getStr;
+    int getInt;
+    long getLong;
+    float getFloat;
+    char getChar;
+    ~mArg() {} // needs to know which member is active, only possible in union-like class
+};
 
+using Args =  std::vector<mArg>;
 
 struct Response {
     CURL *curl;
-    long code;    
+    long code;
     std::string contentType;
     std::string effectiveUrl;
     double totalTime;
     std::string error;
 
-    // std::vector<std::string> cookies;  // A map-like collection of cookies returned in the reque    
+    // std::vector<std::string> cookies;  // A map-like collection of cookies returned in the reque
     std::function<void(void*)>& attachStreamClose();
 
     Response();
-    
+
     template <typename DataType>
     inline DataType* getBody() {
         return static_cast<DataType*>(__body);
@@ -65,32 +74,77 @@ struct Response {
 
 private:
     void close();
-    std::function<void(void*)> streamClose;    
+    std::function<void(void*)> streamClose;
 };
 
 
 struct Request {
     CURL *curl;
-    std::string reqUrl;
-    std::string postData;
     char errorBuffer[CURL_ERROR_SIZE];
-
-    //        union {
-    //            DataType data;
-    //            DataType *dataPtr; // Use this if it is allocated memory, you may need to free while respFilter
-    //        };
+    bcl::Args args;
 
     void* dataPtr; // For function call back data pointer
     Headers headers;
 
-    Request() {
+    Request(bcl::Args &_args) {
         dataPtr = NULL;
+        args = _args;
     }
 
     ~Request() {
     }
 };
 
+// Request Args
+void setArgs(bcl::Args &args, char arg) {
+    mArg a = {.getChar = arg};
+    args.emplace_back(a);
+}
+
+void setArgs(bcl::Args &args, int arg) {
+    mArg a = {.getInt = arg};
+    args.emplace_back(a);
+}
+
+void setArgs(bcl::Args &args, long arg) {
+    mArg a = {.getLong = arg};
+    args.emplace_back(a);
+}
+
+void setArgs(bcl::Args &args, float arg) {
+    mArg a = {.getFloat = arg};
+    args.emplace_back(a);
+}
+
+void setArgs(bcl::Args &args, const char* arg) {
+    mArg a = {.getStr = arg};
+    args.emplace_back(a);
+}
+
+template <typename ArgType, typename... ArgTypes>
+void setArgs(bcl::Args &args, ArgType&& argType, ArgTypes&&... argTypes) {
+    setArgs(args, BACKCURL_FWD(argType));
+    setArgs(args, BACKCURL_FWD(argTypes)...);
+}
+
+template <typename ArgType>
+bcl::Args args(ArgType&& argType) {
+    bcl::Args args;
+    setArgs(args, BACKCURL_FWD(argType));
+    return args;
+}
+
+template <typename ArgType, typename... ArgTypes>
+bcl::Args args(ArgType&& argType,  ArgTypes&&... argTypes) {
+    bcl::Args args;
+    setArgs(args, BACKCURL_FWD(argType));
+    setArgs(args, BACKCURL_FWD(argTypes)...);
+    return args;
+}
+// End Request Args
+
+
+// Curl Options
 template <typename OptType>
 void setOpts(bcl::Request &req, CURLoption curlOpt, OptType&& optType) {
     if (curl_easy_setopt(req.curl, curlOpt, BACKCURL_FWD(optType)) != CURLE_OK) {
@@ -103,6 +157,8 @@ void setOpts(bcl::Request &req, CURLoption a, OptType&& optType, CURLoption b,  
     setOpts(req, a, optType);
     setOpts(req, b, BACKCURL_FWD(optTypes)...);
 }
+// End Curl Options
+
 
 using FutureResponse = std::future<bcl::Response>;
 using FuturePromise = std::promise<bcl::Response>;
@@ -123,7 +179,7 @@ void init();
 void cleanUp();
 
 void LoopBackFire();
-    
+
 namespace internal {
 enum CALL_TYPE
     : uint8_t {
@@ -140,22 +196,23 @@ void __execute__(std::function<void(bcl::Request &req)> optsFilter, std::functio
                  bcl::internal::CALL_TYPE callType, Request &request, Response &response);
 
 void BackCurlLoopCallBackChecker(bcl::Response &s);
-    
+
 template <typename DataType>
 void __stream_close__(void *ptr, DataType *x) {
     delete static_cast<decltype(x)>(ptr);
 }
 }
 
-size_t 
+size_t
 writeContentCallback(void *contents, size_t size, size_t nmemb, void *contentWrapper);
 
 size_t
 writeByteCallback(void *contents, size_t size, size_t nmemb, void *userp);
 
 template <typename DataType>
-void execute(std::function<void(bcl::Request &req)> optsFilter, std::function<void(bcl::Response &resp)> responseCallback, bcl::internal::CALL_TYPE callType = internal::SYNC) {
-    bcl::Request req;
+void execute(std::function<void(bcl::Request &req)> optsFilter, std::function<void(bcl::Response &resp)> responseCallback,
+             bcl::internal::CALL_TYPE callType = internal::SYNC, bcl::Args reqArgs = bcl::Args()) {
+    bcl::Request req(reqArgs);
     bcl::Response res;
     DataType *dt = new DataType;
     req.dataPtr = dt;
@@ -167,23 +224,14 @@ void execute(std::function<void(bcl::Request &req)> optsFilter, std::function<vo
 }
 
 template <typename DataType>
-bcl::Response execute(std::function<void(bcl::Request &req)> optsFilter, bcl::internal::CALL_TYPE callType = internal::SYNC) {
-    bcl::Request req;
+bcl::Response execute(std::function<void(bcl::Request &req)> optsFilter,
+                      bcl::internal::CALL_TYPE callType = internal::SYNC, bcl::Args reqArgs = bcl::Args()) {
+    bcl::Request req(reqArgs);
     bcl::Response res;
     DataType *dt = new DataType;
     req.dataPtr = dt;
     res.attachStreamClose() = std::bind(&internal::__stream_close__<DataType>, std::placeholders::_1, dt);
-//    bcl::Response outerResp;
     bcl::internal::__execute__(optsFilter, [](bcl::Response & resp) {
-//        outerResp.code = resp.code;
-//        outerResp.body = resp.body;
-//        outerResp.__streamRef = resp.__streamRef;
-//        outerResp.contentType = resp.contentType;
-//        outerResp.effectiveUrl = resp.effectiveUrl;
-//        outerResp.error = resp.error;
-//        outerResp.totalTime = resp.totalTime;
-//        outerResp.curl = resp.curl;
-//        outerResp.attachStreamClose() = resp.attachStreamClose();
     } , callType, req, res);
     return res;
 }
@@ -191,18 +239,12 @@ bcl::Response execute(std::function<void(bcl::Request &req)> optsFilter, bcl::in
 template <typename DataType>
 void executeAsync(std::function<void(bcl::Request &req)> reqFilter,  std::function<void(bcl::Response &resp)> responseCallback) {
     std::async(std::launch::async, [&reqFilter, &responseCallback]() {
-        execute<DataType>(reqFilter, responseCallback);
+        execute<DataType>(reqFilter, responseCallback, internal::ASYNC_CALL);
     } );
 }
 
 template <typename DataType>
 auto execFuture(std::function<void(bcl::Request &req)> reqFilter) -> bcl::FutureResponse {
-//        FuturePromise p;
-//        FutureResponse frp = p.get_future();
-//        std::thread( [&p, &reqFilter]{
-//            p.set_value_at_thread_exit(execute<DataType>(reqFilter, ASYNC_CALL));
-//        }).detach();
-//        return frp;
     return std::async(std::launch::async, [&reqFilter]() {
         return execute<DataType>(reqFilter, internal::ASYNC_CALL);
     } );
@@ -212,16 +254,36 @@ auto execFuture(std::function<void(bcl::Request &req)> reqFilter) -> bcl::Future
 
 template <typename DataType>
 void executeOnUI(std::function<void(bcl::Request &req)> reqFilter, std::function<void(bcl::Response &resp)> responseCallback) {
-//        if(internal::_hasMainLoopCallBack) {
-    std::thread([&]() {
+    std::thread([&reqFilter, &responseCallback]() {
         bcl::execute<DataType>(reqFilter, responseCallback, internal::MAIN_LOOP_CALLBACK);
     }).detach();
-//            std::thread t(bcl::execute<DataType>, reqFilter, responseCallback, internal::MAIN_LOOP_CALLBACK);
-//            t.detach();
-//        } else {
-//            fprintf(stderr, "You have not specified the loop back fire on ui update scope, please put bcl::initUILoop(); when start using bcl, and specified bcl::LoopBackFire(); in update scope");
-//        }
+}
+
+
+/** with args **/
+template <typename DataType>
+void executeAsync(std::function<void(bcl::Request &req)> reqFilter, bcl::Args args,  std::function<void(bcl::Response &resp)> responseCallback) {
+    std::async(std::launch::async, [&reqFilter, &responseCallback, &args]() {
+        execute<DataType>(reqFilter, responseCallback, internal::ASYNC_CALL, args);
+    } );
+}
+
+
+
+template <typename DataType>
+auto execFuture(std::function<void(bcl::Request &req)> reqFilter, bcl::Args args) -> bcl::FutureResponse {
+    return std::async(std::launch::async, [&reqFilter, &args]() {
+        return execute<DataType>(reqFilter, internal::ASYNC_CALL, args);
+    } );
+
+}
+
+template <typename DataType>
+void executeOnUI(std::function<void(bcl::Request &req)> reqFilter, bcl::Args args, std::function<void(bcl::Response &resp)> responseCallback) {
+    std::thread([&reqFilter, &responseCallback, &args]() {
+        bcl::execute<DataType>(reqFilter, responseCallback, internal::MAIN_LOOP_CALLBACK, args);
+    }).detach();
 }
 
 }
-#endif /* BackCurl_hpp */
+#endif /* BackCurl_h */
