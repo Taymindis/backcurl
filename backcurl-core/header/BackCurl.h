@@ -238,14 +238,14 @@ bcl::Response execute(std::function<void(bcl::Request &req)> optsFilter,
 
 template <typename DataType>
 void executeAsync(std::function<void(bcl::Request &req)> reqFilter,  std::function<void(bcl::Response &resp)> responseCallback) {
-    std::async(std::launch::async, [&reqFilter, &responseCallback]() {
+    std::async(std::launch::async, [reqFilter, responseCallback]() {
         execute<DataType>(reqFilter, responseCallback, internal::ASYNC_CALL);
     } );
 }
 
 template <typename DataType>
 auto execFuture(std::function<void(bcl::Request &req)> reqFilter) -> bcl::FutureResponse {
-    return std::async(std::launch::async, [&reqFilter]() {
+    return std::async(std::launch::async, [reqFilter]() {
         return execute<DataType>(reqFilter, internal::ASYNC_CALL);
     } );
 
@@ -254,7 +254,7 @@ auto execFuture(std::function<void(bcl::Request &req)> reqFilter) -> bcl::Future
 
 template <typename DataType>
 void executeOnUI(std::function<void(bcl::Request &req)> reqFilter, std::function<void(bcl::Response &resp)> responseCallback) {
-    std::thread([&reqFilter, &responseCallback]() {
+    std::thread([reqFilter, responseCallback]() {
         bcl::execute<DataType>(reqFilter, responseCallback, internal::MAIN_LOOP_CALLBACK);
     }).detach();
 }
@@ -263,7 +263,7 @@ void executeOnUI(std::function<void(bcl::Request &req)> reqFilter, std::function
 /** with args **/
 template <typename DataType>
 void executeAsync(std::function<void(bcl::Request &req)> reqFilter, bcl::Args args,  std::function<void(bcl::Response &resp)> responseCallback) {
-    std::async(std::launch::async, [&reqFilter, &responseCallback, &args]() {
+    std::async(std::launch::async, [reqFilter, responseCallback, args]() {
         execute<DataType>(reqFilter, responseCallback, internal::ASYNC_CALL, args);
     } );
 }
@@ -272,7 +272,7 @@ void executeAsync(std::function<void(bcl::Request &req)> reqFilter, bcl::Args ar
 
 template <typename DataType>
 auto execFuture(std::function<void(bcl::Request &req)> reqFilter, bcl::Args args) -> bcl::FutureResponse {
-    return std::async(std::launch::async, [&reqFilter, &args]() {
+    return std::async(std::launch::async, [reqFilter, args]() {
         return execute<DataType>(reqFilter, internal::ASYNC_CALL, args);
     } );
 
@@ -280,7 +280,7 @@ auto execFuture(std::function<void(bcl::Request &req)> reqFilter, bcl::Args args
 
 template <typename DataType>
 void executeOnUI(std::function<void(bcl::Request &req)> reqFilter, bcl::Args args, std::function<void(bcl::Response &resp)> responseCallback) {
-    std::thread([&reqFilter, &responseCallback, &args]() {
+    std::thread([reqFilter, responseCallback, args]() {
         bcl::execute<DataType>(reqFilter, responseCallback, internal::MAIN_LOOP_CALLBACK, args);
     }).detach();
 }
