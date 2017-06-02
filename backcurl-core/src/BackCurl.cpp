@@ -145,11 +145,11 @@ void __execute__(std::function<void(bcl::Request &req)> optsFilter, std::functio
     bcl::internal::wrapResponse(request, response);
 
     if (callType == internal::ASYNC_CALL) {
-        (*response.__streamRef += 2 ); // Expected will destruct 2 more time
+        (*response.__streamRef) += 2; // Expected will destruct 2 more time
         responseCallback(response);
         //                response.close(); temporary close as Response bundle will close smartly
     } else if (callType == internal::MAIN_LOOP_CALLBACK) {
-        (*response.__streamRef += 2 ); // Expected will destruct 2 more time
+        (*response.__streamRef) += 2; // Expected will destruct 2 more time
         std::function<void()> task(std::bind(responseCallback, response));
         {
             std::lock_guard<std::mutex> lock(_tasks_mutex);
