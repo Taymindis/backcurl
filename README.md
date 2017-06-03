@@ -231,4 +231,36 @@ bcl::execute<bcl::MemoryByte>([](bcl::Request & req) {
 ```
 
 
+## Using extra args for tracking information(alternative of lambda copy)
+```cpp
+for (std::vector<std::string>::iterator it =
+     urls.begin();
+     it != urls.end(); ++it) {
+    std::string url = *it;
+    static int count = 0;
+    bcl::executeOnUI<bcl::MemoryByte>([](bcl::Request & req) -> void {
+        log::messageln("Submitted Url is %s ", req.args[0].getStr);
+        bcl::setOpts(req, CURLOPT_URL ,req.args[0].getStr,
+                     CURLOPT_FOLLOWLOCATION, req.args[1].getLong,
+                     CURLOPT_WRITEFUNCTION, &bcl::writeByteCallback,
+                     CURLOPT_WRITEDATA, req.dataPtr,
+                     CURLOPT_USERAGENT, req.args[2].getStr,
+                     CURLOPT_RANGE, req.args[3].getStr
+                     );
+    }, [&](bcl::Response & resp) {
+        int imageCount = resp.args[4].getInt;
+        bcl::MemoryByte *byte = resp.getBody<bcl::MemoryByte>();
+        log::messageln("Image byte size is %lu",byte->size());
+        spSprite nvgSprite = new NVGImageSprite((unsigned char*) byte->c_str(), static_cast<int>(byte->size()),  3.0f, 0);
+        nvgSprite->setPosition(60 * imageCount, 60 * imageCount);
+        nvgSprite->setSize(getStage()->getSize()/5);
+        //            nvgSprite->setPriority(200);
+        log::messageln("The count is %d", imageCount);
+        addChild(nvgSprite);
+    }, bcl::args(url.c_str(), 1L, "libbackcurl-agent/1.0", "0-20000000", ++count));
+}
+```
+
+
+
 
