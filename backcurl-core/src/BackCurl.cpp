@@ -173,7 +173,8 @@ void __execute__(std::function<void(bcl::Request &req)> optsFilter, std::functio
 }
 
 // ** Response Bundle ** /
-bcl::Response::Response() {
+bcl::Response::Response(bcl::Args &_args) {
+    args = _args;
     curl = NULL;
     __streamRef = new int(1);
     __body = NULL;

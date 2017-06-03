@@ -68,14 +68,13 @@ void doRunOnUI () {
         CURLOPT_USERAGENT, req.args[2].getStr,
         CURLOPT_RANGE, req.args[3].getStr
                     );
-    }, bcl::args("http://www.google.com", 1L, "libbackcurl-agent/1.0", "0-20000000"),  
-
+    },   
     [&](bcl::Response & resp) {
         printf("On UI === %s\n", resp.getBody<std::string>()->c_str());
         printf("Done , stop gui running with count ui %d\n", countUI );
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
         gui_running = false;
-    });
+    }, bcl::args("http://www.google.com", 1L, "libbackcurl-agent/1.0", "0-20000000"));
 
     while (gui_running) {
         doGuiWork();

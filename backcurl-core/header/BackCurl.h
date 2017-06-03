@@ -66,11 +66,12 @@ struct Response {
     std::string effectiveUrl;
     double totalTime;
     std::string error;
+    bcl::Args args;
 
     // std::vector<std::string> cookies;  // A map-like collection of cookies returned in the reque
     std::function<void(void*)> & attachStreamClose();
 
-    Response();
+    Response(bcl::Args &_args);
 
     template <typename DataType>
     inline DataType * getBody() {
@@ -205,7 +206,7 @@ template <typename DataType>
 void execute(std::function<void(bcl::Request &req)> optsFilter, std::function<void(bcl::Response &resp)> responseCallback,
              bcl::internal::CALL_TYPE callType = internal::SYNC, bcl::Args reqArgs = bcl::Args()) {
     bcl::Request req(reqArgs);
-    bcl::Response res;
+    bcl::Response res(reqArgs);
     DataType *dt = new DataType;
     req.dataPtr = dt;
 
@@ -219,7 +220,7 @@ template <typename DataType>
 bcl::Response execute(std::function<void(bcl::Request &req)> optsFilter,
                       bcl::internal::CALL_TYPE callType = internal::SYNC, bcl::Args reqArgs = bcl::Args()) {
     bcl::Request req(reqArgs);
-    bcl::Response res;
+    bcl::Response res(reqArgs);
     DataType *dt = new DataType;
     req.dataPtr = dt;
     res.attachStreamClose() = std::bind(&internal::__stream_close__<DataType>, std::placeholders::_1, dt);
@@ -254,7 +255,7 @@ void executeOnUI(std::function<void(bcl::Request &req)> reqFilter, std::function
 
 /** with args **/
 template <typename DataType>
-void executeAsync(std::function<void(bcl::Request &req)> reqFilter, bcl::Args args,  std::function<void(bcl::Response &resp)> responseCallback) {
+void executeAsync(std::function<void(bcl::Request &req)> reqFilter,  std::function<void(bcl::Response &resp)> responseCallback, bcl::Args args) {
     std::async(std::launch::async, [reqFilter, responseCallback, args]() {
         execute<DataType>(reqFilter, responseCallback, internal::ASYNC_CALL, args);
     } );
@@ -271,7 +272,7 @@ auto execFuture(std::function<void(bcl::Request &req)> reqFilter, bcl::Args args
 }
 
 template <typename DataType>
-void executeOnUI(std::function<void(bcl::Request &req)> reqFilter, bcl::Args args, std::function<void(bcl::Response &resp)> responseCallback) {
+void executeOnUI(std::function<void(bcl::Request &req)> reqFilter, std::function<void(bcl::Response &resp)> responseCallback, bcl::Args args) {
     std::thread([reqFilter, responseCallback, args]() {
         bcl::execute<DataType>(reqFilter, responseCallback, internal::MAIN_LOOP_CALLBACK, args);
     }).detach();
