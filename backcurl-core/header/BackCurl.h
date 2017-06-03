@@ -20,6 +20,7 @@
 #include <future>
 #include <thread>
 #include <string>
+#include <cstring>
 #include <vector>
 #include <curl/curl.h>
 
