@@ -53,7 +53,7 @@ writeByteCallback(void *contents, size_t size, size_t nmemb, void *userp) {
 }
 
 // For Content
-size_t 
+size_t
 writeContentCallback(void *contents, size_t size, size_t nmemb, void *contentWrapper) {
     size_t realsize = size * nmemb;
     std::string *memBlock = (std::string *)contentWrapper;
@@ -102,10 +102,6 @@ void __execute__(std::function<void(bcl::Request &req)> optsFilter, std::functio
     CURLcode curlCode;
     curl_slist *headersList = NULL;
     // curl_global_init(CURL_GLOBAL_ALL);
-
-    // Response response;
-    response.__streamRef = new int;
-    (*response.__streamRef)++;
 
     /* init the curl session */
     request.curl = curl_easy_init();
@@ -179,17 +175,20 @@ void __execute__(std::function<void(bcl::Request &req)> optsFilter, std::functio
 // ** Response Bundle ** /
 bcl::Response::Response() {
     curl = NULL;
-    __streamRef = NULL;
+    __streamRef = new int(1);
     __body = NULL;
 
 }
 
 void bcl::Response::close() {
     // delete static_cast<std::remove_pointer<decltype(body)*>::type>(body); //best solution so far
-    streamClose(__body);
+    if (__body)
+        streamClose(__body);
+
     delete __streamRef;
     //        printf("address of CURL is %p\n", curl);
-    curl_easy_cleanup(curl); // TODO please implement clean up curl later by using valgrind got error or not
+    if (curl)
+        curl_easy_cleanup(curl); // TODO please implement clean up curl later by using valgrind got error or not
     __streamRef = NULL;
     __body = NULL;
 }
@@ -227,101 +226,3 @@ bcl::Response::~Response () {
 }
 
 }
-
-
-
-
-
-// Test Scope ------------------------------------------------------------------
-
-// void simpleGetOption(bcl::Request &req) {
-//     bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
-//                  CURLOPT_FOLLOWLOCATION, 1L,
-//                  CURLOPT_WRITEFUNCTION, &bcl::writeContentCallback,
-//                  CURLOPT_WRITEDATA, req.dataPtr,
-//                  CURLOPT_USERAGENT, "libcurl-agent/1.0",
-//                  CURLOPT_RANGE, "0-200000"
-//                 );
-// }
-
-
-// void doSync() {
-//     bcl::execute<std::string>(simpleGetOption, [&](bcl::Response & resp) {
-//         std::string ret =  std::string(resp.getBody<std::string>()->c_str());
-//         printf("Sync === %s\n", ret.c_str());
-//         //    return ret;
-//         // std::this_thread::sleep_for(std::chrono::milliseconds(500));
-//         return resp;
-//     });
-
-// }
-
-
-// void doFuture() {
-//     bcl::FutureResponse frp;
-
-//     frp = bcl::execFuture<std::string>(simpleGetOption);
-//     while(bcl::hasRequestedButNotReady(frp)) {
-//         printf("Future Sync ==%s\n", "Drawing Graphiccccc");
-//     }
-
-//     bcl::Response r = frp.get();
-//     printf("The data content is = %s\n", r.getBody<std::string>()->c_str());
-//     printf("Got Http Status code = %ld\n", r.code);
-//     printf("Got Error = %s\n", r.error.c_str());
-
-//     if(!bcl::isProcessing(frp)) printf("no data process now, no more coming data\n\n" );
-
-// }
-
-// int countUI = 0;
-// void doGuiWork() {
-//     printf("%s", "Drawing thousand Pieces of Color ");
-//     countUI++;
-
-// }
-
-// void doUpdate() {
-//     bcl::LoopBackFire();
-// }
-
-// void doRunOnUI () {
-//     bool gui_running = true;
-//     std::cout << "Game is running thread: ";
-
-//     bcl::executeOnUI<std::string>([](bcl::Request & req) -> void {
-//         bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
-//         CURLOPT_FOLLOWLOCATION, 1L,
-//         CURLOPT_WRITEFUNCTION, &bcl::writeContentCallback,
-//         CURLOPT_WRITEDATA, req.dataPtr,
-//         CURLOPT_USERAGENT, "libcurl-agent/1.0",
-//         CURLOPT_RANGE, "0-200000"
-//                     );
-//     }, [&](bcl::Response & resp) {
-//         printf("On UI === %s\n", resp.getBody<std::string>()->c_str());
-//         printf("Done , stop gui running with count ui %d\n", countUI );
-//         std::this_thread::sleep_for(std::chrono::milliseconds(500));
-//         gui_running = false;
-//     });
-
-//     while (gui_running) {
-//         doGuiWork();
-//         doUpdate();
-//         std::this_thread::sleep_for(std::chrono::milliseconds(1000 / 16));
-//     }
-// }
-
-// int main()
-// {
-//     bcl::init();
-    
-//     doSync();
-
-//     // doRunOnUI();
-
-
-//     bcl::cleanUp();
-
-//     return 1;
-// }
-
