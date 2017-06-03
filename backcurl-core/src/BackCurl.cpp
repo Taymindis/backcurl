@@ -225,4 +225,99 @@ bcl::Response::~Response () {
     }
 }
 
+bcl::Arg::Arg(): type(0) {}
+
+bcl::Arg::Arg(Arg* a) : type(a->type) {
+    mapVal(*a, true);
+}
+
+bcl::Arg::Arg(const Arg& a) : type(a.type)
+{
+    mapVal(a, true);
+
+}
+
+Arg& bcl::Arg::operator = (const Arg& a)
+{
+    // Assignment operator
+    if (this != &a) // Avoid self assignment
+    {
+        mapVal(a, false);
+    }
+
+    return *this;
+}
+
+bcl::Arg::~Arg() {
+    if (type == 5)
+        delete[] getStr;
+}
+
+void bcl::Arg::forStr(const char* s, bool isNew) {
+    if (!isNew && type == 5)
+        delete []getStr;
+    getStr = new char [strlen(s) + 1];
+    strcpy(getStr, s);
+}
+
+void bcl::Arg::mapVal(const Arg &a, bool isNew) {
+    switch (a.type) {
+    case 1:
+        getInt = a.getInt;
+        break;
+    case 2:
+        getFloat = a.getFloat;
+        break;
+    case 3:
+        getLong = a.getLong;
+        break;
+    case 4:
+        getChar = a.getChar;
+        break;
+    case 5:
+        forStr(a.getStr, isNew);
+        break;
+    }
+    type = a.type;
+}
+
+
+
+// Request Args
+void setArgs(bcl::Args &args, int arg) {
+    Arg a;
+    a.getInt = arg;
+    a.type = 1;
+    args.emplace_back(a);
+}
+
+void setArgs(bcl::Args &args, float arg) {
+    Arg a;
+    a.getFloat = arg;
+    a.type = 2;
+    args.emplace_back(a);
+}
+
+void setArgs(bcl::Args &args, long arg) {
+    Arg a;
+    a.getLong = arg;
+    a.type = 3;
+    args.emplace_back(a);
+}
+
+void setArgs(bcl::Args &args, char arg) {
+    Arg a;
+    a.getChar = arg;
+    a.type = 4;
+    args.emplace_back(a);
+}
+
+void setArgs(bcl::Args &args, const char* arg) {
+    Arg a;
+    a.getStr = new char[strlen(arg) + 1];
+    strcpy(a.getStr, arg);
+    a.type = 5;
+    args.emplace_back(a);
+}
+
 }

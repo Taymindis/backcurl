@@ -35,20 +35,31 @@ namespace bcl {
 // Declaration ------------------
 
 using Headers = std::vector<std::pair<std::string, std::string>>;
-union mArg
-{
-    const char* getStr;
-    int getInt;
-    long getLong;
-    float getFloat;
-    char getChar;
-    ~mArg() {} // needs to know which member is active, only possible in union-like class
+
+struct Arg {
+    int type;
+    union {
+        int getInt;
+        float getFloat;
+        long getLong;
+        char getChar;
+        char* getStr;
+    };
+
+    Arg();
+    Arg(Arg * a);
+    Arg(const Arg & a);
+    Arg & operator = (const Arg & a);
+    ~Arg();
+private:
+    void forStr(const char* s, bool isNew);
+    void mapVal(const Arg & a, bool isNew);
 };
 
-using Args =  std::vector<mArg>;
+using Args =  std::vector<Arg>;
 
 struct Response {
-    CURL *curl;
+    CURL * curl;
     long code;
     std::string contentType;
     std::string effectiveUrl;
@@ -56,12 +67,12 @@ struct Response {
     std::string error;
 
     // std::vector<std::string> cookies;  // A map-like collection of cookies returned in the reque
-    std::function<void(void*)>& attachStreamClose();
+    std::function<void(void*)> & attachStreamClose();
 
     Response();
 
     template <typename DataType>
-    inline DataType* getBody() {
+    inline DataType * getBody() {
         return static_cast<DataType*>(__body);
     }
 
@@ -95,31 +106,11 @@ struct Request {
     }
 };
 
-// Request Args
-void setArgs(bcl::Args &args, char arg) {
-    mArg a = {.getChar = arg};
-    args.emplace_back(a);
-}
-
-void setArgs(bcl::Args &args, int arg) {
-    mArg a = {.getInt = arg};
-    args.emplace_back(a);
-}
-
-void setArgs(bcl::Args &args, long arg) {
-    mArg a = {.getLong = arg};
-    args.emplace_back(a);
-}
-
-void setArgs(bcl::Args &args, float arg) {
-    mArg a = {.getFloat = arg};
-    args.emplace_back(a);
-}
-
-void setArgs(bcl::Args &args, const char* arg) {
-    mArg a = {.getStr = arg};
-    args.emplace_back(a);
-}
+void setArgs(bcl::Args &args, int arg);
+void setArgs(bcl::Args &args, float arg);
+void setArgs(bcl::Args &args, long arg);
+void setArgs(bcl::Args &args, char arg);
+void setArgs(bcl::Args &args, const char* arg);
 
 template <typename ArgType, typename... ArgTypes>
 void setArgs(bcl::Args &args, ArgType&& argType, ArgTypes&&... argTypes) {
