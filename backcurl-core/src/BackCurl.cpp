@@ -226,16 +226,19 @@ bcl::Response::~Response () {
     }
 }
 
-bcl::Arg::Arg(): type(0) {}
-
-bcl::Arg::Arg(Arg* a) : type(a->type) {
-    mapVal(*a, true);
+bcl::Arg::Arg(): type(0) {
+    __strRef = new int(1);
 }
 
-bcl::Arg::Arg(const Arg& a) : type(a.type)
-{
-    mapVal(a, true);
+bcl::Arg::Arg(Arg* a) : type(a->type) {
+    mapVal(*a);
+    __strRef = new int(1);
+}
 
+bcl::Arg::Arg(const Arg& a) : type(a.type), __strRef(a.__strRef)
+{
+    mapVal(a);
+    (*__strRef) ++;
 }
 
 Arg& bcl::Arg::operator = (const Arg& a)
@@ -243,25 +246,28 @@ Arg& bcl::Arg::operator = (const Arg& a)
     // Assignment operator
     if (this != &a) // Avoid self assignment
     {
-        mapVal(a, false);
+        if (--(*__strRef) == 0) {
+            if (type == 5)
+                delete []getStr;
+            delete __strRef;
+        }
+        mapVal(a);
+        __strRef = a.__strRef;
+        (*__strRef)++;
     }
 
     return *this;
 }
 
 bcl::Arg::~Arg() {
-    if (type == 5)
-        delete[] getStr;
+    if (--(*__strRef) == 0) {
+        if (type == 5)
+            delete []getStr;
+        delete __strRef;
+    }
 }
 
-void bcl::Arg::forStr(const char* s, bool isNew) {
-    if (!isNew && type == 5)
-        delete []getStr;
-    getStr = new char [strlen(s) + 1];
-    strcpy(getStr, s);
-}
-
-void bcl::Arg::mapVal(const Arg &a, bool isNew) {
+void bcl::Arg::mapVal(const Arg &a) {
     switch (a.type) {
     case 1:
         getInt = a.getInt;
@@ -276,7 +282,7 @@ void bcl::Arg::mapVal(const Arg &a, bool isNew) {
         getChar = a.getChar;
         break;
     case 5:
-        forStr(a.getStr, isNew);
+        getStr = a.getStr;
         break;
     }
     type = a.type;

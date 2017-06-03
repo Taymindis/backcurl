@@ -46,6 +46,7 @@ struct Arg {
         char getChar;
         char* getStr;
     };
+    int *__strRef;
 
     Arg();
     Arg(Arg * a);
@@ -53,8 +54,7 @@ struct Arg {
     Arg & operator = (const Arg & a);
     ~Arg();
 private:
-    void forStr(const char* s, bool isNew);
-    void mapVal(const Arg & a, bool isNew);
+    void mapVal(const Arg & a);
 };
 
 using Args =  std::vector<Arg>;
