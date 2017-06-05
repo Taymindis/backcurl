@@ -22,7 +22,7 @@
 #include <string>
 #include <cstring>
 #include <vector>
-#include <curl/curl.h>
+#include "curl/curl.h"
 
 #ifndef EMPTY_BACK_PARAM
 #define EMPTY_BACK_PARAM std::vector<std::pair<std::string, std::string>>()
