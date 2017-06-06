@@ -255,6 +255,16 @@ void executeOnUI(std::function<void(bcl::Request &req)> reqFilter, std::function
 
 /** with args **/
 template <typename DataType>
+void execute(std::function<void(bcl::Request &req)> reqFilter, bcl::Args args) {
+    execute<DataType>(reqFilter, [](bcl::Response &resp){}, internal::SYNC, args); 
+}
+
+template <typename DataType>
+void execute(std::function<void(bcl::Request &req)> reqFilter,  std::function<void(bcl::Response &resp)> responseCallback, bcl::Args args) {
+    execute<DataType>(reqFilter, responseCallback, internal::SYNC, args); 
+}
+
+template <typename DataType>
 void executeAsync(std::function<void(bcl::Request &req)> reqFilter,  std::function<void(bcl::Response &resp)> responseCallback, bcl::Args args) {
     std::async(std::launch::async, [reqFilter, responseCallback, args]() {
         execute<DataType>(reqFilter, responseCallback, internal::ASYNC_CALL, args);

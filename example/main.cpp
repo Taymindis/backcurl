@@ -36,7 +36,8 @@ void doSync() {
         if (!curl_easy_getinfo(resp.curl, CURLINFO_HEADER_SIZE, &headerSize)) {
             printf("Downloaded header size %ld bytes\n", headerSize);
         }
-    });
+        printf("You have a argument = %d\n", resp.args[0].getInt);
+    }, bcl::args(1,2,3));
 
 }
 
