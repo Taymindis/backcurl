@@ -42,6 +42,18 @@ void doSync() {
 }
 
 
+void doSync2() {
+    bcl::execute<std::string>(simpleGetOption, [&](bcl::Response & resp) {
+        std::string ret =  std::string(resp.getBody<std::string>()->c_str());
+        printf("Sync === %s\n", ret.c_str());
+        //    return ret;
+        // std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        printf("%s\n", resp.args[0].getStr);
+        printf("%ld\n", resp.args[1].getLong);
+    },bcl::args("ABCD Args", 192321839L));
+
+}
+
 void doFuture() {
     bcl::FutureResponse frp;
 
@@ -172,7 +184,8 @@ int main()
 {
     bcl::init();
 
-    // doSync();
+    doSync();
+    doSync2();
 
     doFuture();
 

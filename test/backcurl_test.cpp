@@ -23,8 +23,9 @@ void doSync() {
         printf("Sync === %s\n", ret.c_str());
         //    return ret;
         // std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        return resp;
-    });
+        printf("%s\n", resp.args[0].getStr);
+        printf("%ld\n", resp.args[1].getLong);
+    },bcl::args("ABCD Args", 192321839L));
 
 }
 
