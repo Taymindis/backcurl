@@ -216,7 +216,7 @@ Response& bcl::Response::operator = (const Response& r)
     return *this;
 }
 
-std::function<void(void*)>& bcl::Response::attachStreamClose()  {
+lmbdaclz& bcl::Response::attach_lmbdaclz() {
     return streamClose;
 }
 

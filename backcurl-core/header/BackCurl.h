@@ -58,7 +58,7 @@ private:
 };
 
 using Args =  std::vector<Arg>;
-
+typedef void (*lmbdaclz)(void *x);
 struct Response {
     CURL * curl;
     long code;
@@ -67,9 +67,10 @@ struct Response {
     double totalTime;
     std::string error;
     bcl::Args args;
-
+    
     // std::vector<std::string> cookies;  // A map-like collection of cookies returned in the reque
-    std::function<void(void*)> & attachStreamClose();
+
+    lmbdaclz& attach_lmbdaclz();
 
     Response(bcl::Args &_args);
 
@@ -87,7 +88,7 @@ struct Response {
 
 private:
     void close();
-    std::function<void(void*)> streamClose;
+    lmbdaclz streamClose;
 };
 
 
@@ -210,7 +211,8 @@ void execute(std::function<void(bcl::Request &req)> optsFilter, std::function<vo
     DataType *dt = new DataType;
     req.dataPtr = dt;
 
-    res.attachStreamClose() = std::bind(&internal::__stream_close__<DataType>, std::placeholders::_1, dt);
+    res.attach_lmbdaclz() = [](void *x) { delete static_cast<DataType*>(x); };
+
     bcl::internal::__execute__(optsFilter, responseCallback, callType, req, res);
 
 
@@ -223,7 +225,7 @@ bcl::Response execute(std::function<void(bcl::Request &req)> optsFilter,
     bcl::Response res(reqArgs);
     DataType *dt = new DataType;
     req.dataPtr = dt;
-    res.attachStreamClose() = std::bind(&internal::__stream_close__<DataType>, std::placeholders::_1, dt);
+    res.attach_lmbdaclz() = [](void *x) { delete static_cast<DataType*>(x); };
     bcl::internal::__execute__(optsFilter, [](bcl::Response & resp) {
     } , callType, req, res);
     return res;
@@ -256,12 +258,12 @@ void executeOnUI(std::function<void(bcl::Request &req)> reqFilter, std::function
 /** with args **/
 template <typename DataType>
 void execute(std::function<void(bcl::Request &req)> reqFilter, bcl::Args args) {
-    execute<DataType>(reqFilter, [](bcl::Response &resp){}, internal::SYNC, args); 
+    execute<DataType>(reqFilter, [](bcl::Response & resp) {}, internal::SYNC, args);
 }
 
 template <typename DataType>
 void execute(std::function<void(bcl::Request &req)> reqFilter,  std::function<void(bcl::Response &resp)> responseCallback, bcl::Args args) {
-    execute<DataType>(reqFilter, responseCallback, internal::SYNC, args); 
+    execute<DataType>(reqFilter, responseCallback, internal::SYNC, args);
 }
 
 template <typename DataType>
