@@ -4,4 +4,6 @@ example/a\.out
 *.jpeg
 
 *.out
+*/*.out
+*/*.DS_Store
 backcurl-android/obj/*
