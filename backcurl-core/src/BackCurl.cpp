@@ -143,19 +143,11 @@ namespace bcl {
             }
             
             // delete []request.cbPtr;
-            switch (callType) {
-                case internal::MAIN_LOOP_CALLBACK:
-                {
-                    std::lock_guard<std::mutex> lock(_tasks_mutex);
-                    _mainLoopTasks.push_back(std::move(response));
-                }
-                    break;
-                case internal::ASYNC_CALL:
-                    response->callBack(&(*response));
-                    break;
-                default:
-                    response->callBack(&(*response));
-                    break;
+            if(callType == internal::MAIN_LOOP_CALLBACK) {
+                std::lock_guard<std::mutex> lock(_tasks_mutex);
+                _mainLoopTasks.push_back(std::move(response));
+            } else {
+                response->callBack(&(*response));
             }
         }
         
