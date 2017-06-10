@@ -38,10 +38,10 @@ void doFuture() {
         printf("\r Future Sync ==%s ----%d", "Drawing Graphiccccc with count elapsed ", countUI++);
     }
 
-    bcl::Response r = frp.get();
-    printf("The data content is = %s\n", r.getBody<std::string>()->c_str());
-    printf("Got Http Status code = %ld\n", r.code);
-    printf("Got Error = %s\n", r.error.c_str());
+    bcl::FutureResp r = frp.get();
+    printf("The data content is = %s\n", r->getBody<std::string>()->c_str());
+    printf("Got Http Status code = %ld\n", r->code);
+    printf("Got Error = %s\n", r->error.c_str());
 
     if(!bcl::isProcessing(frp)) printf("no data process now, no more coming data\n\n" );
 
