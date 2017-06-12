@@ -13,7 +13,8 @@ include $(CLEAR_VARS)
 LOCAL_MODULE    := libbackcurl
 
 LOCAL_C_INCLUDES := \
-		$(LOCAL_PATH)/../../backcurl-core/header
+		$(LOCAL_PATH)/../../backcurl-core/header \
+		$(LOCAL_PATH)/../../curl-android-ios/prebuilt-with-ssl/android/include
 
 LOCAL_SRC_FILES +=  ../../backcurl-core/src/BackCurl.cpp
 
