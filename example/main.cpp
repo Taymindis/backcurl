@@ -210,14 +210,9 @@ int main()
 
     doSync();
     doSync2();
-
-    int a = 20;
-    while (a-- > 0) {
-        doAsyncPost();
-        doFuture();
-        doRunOnUI();
-    }
-
+    doAsyncPost();
+    doFuture();
+    doRunOnUI();
     // doFileDownload();
     bcl::cleanUp();
 
