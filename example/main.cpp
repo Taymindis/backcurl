@@ -2,11 +2,11 @@
 #include <fcntl.h>
 #include <backcurl/BackCurl.h>
 /************************************ Test Scope ******************************************/
-void simpleGetOption(bcl::Request &req) {
+void simpleGetOption(bcl::Request *req) {
     bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
                  CURLOPT_FOLLOWLOCATION, 1L,
                  CURLOPT_WRITEFUNCTION, &bcl::writeContentCallback,
-                 CURLOPT_WRITEDATA, req.dataPtr,
+                 CURLOPT_WRITEDATA, req->dataPtr,
                  CURLOPT_USERAGENT, "libcurl-agent/1.0",
                  CURLOPT_RANGE, "0-20000000"
                 );
@@ -15,51 +15,51 @@ void simpleGetOption(bcl::Request &req) {
 int countUI = 0;
 
 void doSync() {
-    bcl::execute<bcl::MemoryByte>([](bcl::Request & req) {
+    bcl::execute<bcl::MemoryByte>([](bcl::Request * req) {
         bcl::setOpts(req, CURLOPT_URL , "http://wallpapercave.com/wp/LmOgKXz.jpg",
                      CURLOPT_FOLLOWLOCATION, 1L,
                      CURLOPT_WRITEFUNCTION, &bcl::writeByteCallback,
-                     CURLOPT_WRITEDATA, req.dataPtr,
+                     CURLOPT_WRITEDATA, req->dataPtr,
                      CURLOPT_USERAGENT, "libcurl-agent/1.0",
                      CURLOPT_RANGE, "0-20000000"
                     );
 
-        printf("You have first argument = %d\n", req.args[0].getInt);
-        printf("You have second argument = %d\n", req.args[1].getInt);
-    }, [&](bcl::Response & resp) {
-        printf("Downloaded content 0x%2s\n", (const unsigned char*)resp.getBody<bcl::MemoryByte>()->c_str());
-        printf("bcl::MemoryByte size is %ld\n", resp.getBody<bcl::MemoryByte>()->size());
+        printf("You have first argument = %d\n", req->args[0].getInt);
+        printf("You have second argument = %d\n", req->args[1].getInt);
+    }, [&](bcl::Response * resp) {
+        printf("Downloaded content 0x%2s\n", (const unsigned char*)resp->getBody<bcl::MemoryByte>()->c_str());
+        printf("bcl::MemoryByte size is %ld\n", resp->getBody<bcl::MemoryByte>()->size());
         double dl;
-        if (!curl_easy_getinfo(resp.curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &dl)) {
+        if (!curl_easy_getinfo(resp->curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &dl)) {
             printf("Downloaded %.0f bytes\n", dl);
         }
         long headerSize;
-        if (!curl_easy_getinfo(resp.curl, CURLINFO_HEADER_SIZE, &headerSize)) {
+        if (!curl_easy_getinfo(resp->curl, CURLINFO_HEADER_SIZE, &headerSize)) {
             printf("Downloaded header size %ld bytes\n", headerSize);
         }
 
-        printf("You have Response first argument = %d\n", resp.args[0].getInt);
-        printf("You have Response second argument = %d\n", resp.args[1].getInt);
-        printf("You have Response third argument = %s\n", resp.args[2].getStr);
+        printf("You have Response first argument = %d\n", resp->args[0].getInt);
+        printf("You have Response second argument = %d\n", resp->args[1].getInt);
+        printf("You have Response third argument = %s\n", resp->args[2].getStr);
     }, bcl::args(1, 2, "www.github.com"));
 
 }
 
 
 void doAsyncPost() {
-    bcl::executeAsync<bcl::MemoryByte>([](bcl::Request & req) {
+    bcl::executeAsync<bcl::MemoryByte>([](bcl::Request * req) {
         char url[50] = "http://httpbin.org/post";
         bcl::setOpts(req, CURLOPT_URL , url,
                      CURLOPT_POSTFIELDSIZE, strlen(url),
                      CURLOPT_COPYPOSTFIELDS, url
                     );
 
-        printf("You have first argument = %d\n", req.args[0].getInt);
-        printf("You have second argument = %d\n", req.args[1].getInt);
-    }, [&](bcl::Response & resp) {
-        printf("You have Response first argument = %d\n", resp.args[0].getInt);
-        printf("You have Response second argument = %d\n", resp.args[1].getInt);
-        printf("You have Response third argument = %s\n", resp.args[2].getStr);
+        printf("You have first argument = %d\n", req->args[0].getInt);
+        printf("You have second argument = %d\n", req->args[1].getInt);
+    }, [&](bcl::Response * resp) {
+        printf("You have Response first argument = %d\n", resp->args[0].getInt);
+        printf("You have Response second argument = %d\n", resp->args[1].getInt);
+        printf("You have Response third argument = %s\n", resp->args[2].getStr);
     }, bcl::args(1, 2, "www.github.com"));
 
 
@@ -67,14 +67,14 @@ void doAsyncPost() {
 
 
 void doSync2() {
-    bcl::execute<std::string>(simpleGetOption, [&](bcl::Response & resp) {
-        std::string ret =  std::string(resp.getBody<std::string>()->c_str());
+    bcl::execute<std::string>(simpleGetOption, [&](bcl::Response * resp) {
+        std::string ret =  std::string(resp->getBody<std::string>()->c_str());
         printf("Sync === %s\n", ret.c_str());
         //    return ret;
         // std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        // printf("%s\n", resp.args[0].getStr);
-        printf("%ld\n", resp.args[0].getLong);
-        printf("%s\n", resp.args[1].getStr);
+        // printf("%s\n", resp->args[0].getStr);
+        printf("%ld\n", resp->args[0].getLong);
+        printf("%s\n", resp->args[1].getStr);
     }, bcl::args(192321839L, "www.libbackcurl.com"));
 
 }
@@ -117,17 +117,17 @@ void doRunOnUI () {
     bool gui_running = true;
     std::cout << "Game is running thread: ";
 
-    bcl::executeOnUI<std::string>([](bcl::Request & req) -> void {
-        bcl::setOpts(req, CURLOPT_URL , req.args[0].getStr,
+    bcl::executeOnUI<std::string>([](bcl::Request * req) -> void {
+        bcl::setOpts(req, CURLOPT_URL , req->args[0].getStr,
         CURLOPT_FOLLOWLOCATION, 1L,
         CURLOPT_WRITEFUNCTION, &bcl::writeContentCallback,
-        CURLOPT_WRITEDATA, req.dataPtr,
+        CURLOPT_WRITEDATA, req->dataPtr,
         CURLOPT_USERAGENT, "libcurl-agent/1.0",
         CURLOPT_RANGE, "0-200000"
                     );
     },
-    [&](bcl::Response & resp) {
-        printf("On UI === %s\n", resp.getBody<std::string>()->c_str());
+    [&](bcl::Response * resp) {
+        printf("On UI === %s\n", resp->getBody<std::string>()->c_str());
         printf("Done , stop gui running with count ui %d\n", countUI );
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
         gui_running = false;
@@ -156,17 +156,17 @@ void doRunOnUI () {
 // void doFileDownload() {
 //     const char *url = "http://wallpapercave.com/wp/LmOgKXz.jpg";
 //     char outfilename[] = "husky_dog_wallpaper.jpeg";
-//     bcl::execute<MyFileAgent>([&](bcl::Request & req) -> void {
-//         MyFileAgent* fAgent = (MyFileAgent*)req.dataPtr;
+//     bcl::execute<MyFileAgent>([&](bcl::Request * req) -> void {
+//         MyFileAgent* fAgent = (MyFileAgent*)req->dataPtr;
 //         fAgent->fd = fopen(outfilename, "ab+");
 //         bcl::setOpts(req, CURLOPT_URL, url,
 //         CURLOPT_WRITEFUNCTION, write_data,
-//         CURLOPT_WRITEDATA, req.dataPtr,
+//         CURLOPT_WRITEDATA, req->dataPtr,
 //         CURLOPT_FOLLOWLOCATION, 1L
 //                     );
-//     }, [&](bcl::Response & resp) {
-//         printf("Response content type = %s\n", resp.contentType.c_str());
-//         fclose(resp.getBody<MyFileAgent>()->fd);
+//     }, [&](bcl::Response * resp) {
+//         printf("Response content type = %s\n", resp->contentType.c_str());
+//         fclose(resp->getBody<MyFileAgent>()->fd);
 //     });
 
 
@@ -177,8 +177,8 @@ void doRunOnUI () {
 
 // void doFileUpload() {
 //     double speed_upload, total_time;
-//     bcl::executeAsync<MyFileAgent>([&file_info](bcl::Request & req) -> void {
-//          MyFileAgent* fAgent = (MyFileAgent*)req.dataPtr;
+//     bcl::executeAsync<MyFileAgent>([&file_info](bcl::Request * req) -> void {
+//          MyFileAgent* fAgent = (MyFileAgent*)req->dataPtr;
 //          fAgent->fd = fopen("debugit", "rb"); /* open file to upload */
 //         if (!fAgent->fd)
 //             return; /* can't continue */
@@ -189,15 +189,15 @@ void doRunOnUI () {
 
 //         bcl::setOpts(req, CURLOPT_URL , "http://www.dropbox.com/....",
 //         CURLOPT_UPLOAD, 1L
-//         CURLOPT_READDATA, req.dataPtr,
+//         CURLOPT_READDATA, req->dataPtr,
 //         CURLOPT_INFILESIZE_LARGE, (curl_off_t)fAgent->file_info.st_size,
 //         CURLOPT_VERBOSE, 1L
 //                     );
-//     }, [&speed_upload, &fd](bcl::Response & resp) -> void {
-//         curl_easy_getinfo(resp.curl, CURLINFO_SPEED_UPLOAD, speed_upload);
+//     }, [&speed_upload, &fd](bcl::Response * resp) -> void {
+//         curl_easy_getinfo(resp->curl, CURLINFO_SPEED_UPLOAD, speed_upload);
 //         fprintf(stderr, "Speed: %.3f bytes/sec during %.3f seconds\n",
-//         speed_upload, resp.total_time);
-//         fclose(resp.getBody<MyFileAgent>()->fd);
+//         speed_upload, resp->total_time);
+//         fclose(resp->getBody<MyFileAgent>()->fd);
 //     });
 // }
 
@@ -211,7 +211,7 @@ int main()
     doSync();
     doSync2();
 
-    int a = 1;
+    int a = 20;
     while (a-- > 0) {
         doAsyncPost();
         doFuture();

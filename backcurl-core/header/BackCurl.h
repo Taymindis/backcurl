@@ -147,14 +147,14 @@ namespace bcl {
     
     // Curl Options
     template <typename OptType>
-    void setOpts(bcl::Request &req, CURLoption curlOpt, OptType&& optType) {
-        if (curl_easy_setopt(req.curl, curlOpt, BACKCURL_FWD(optType)) != CURLE_OK) {
-            throw req.errorBuffer;
+    void setOpts(bcl::Request *req, CURLoption curlOpt, OptType&& optType) {
+        if (curl_easy_setopt(req->curl, curlOpt, BACKCURL_FWD(optType)) != CURLE_OK) {
+            throw req->errorBuffer;
         };
     }
     
     template <typename OptType, typename... OptTypes>
-    void setOpts(bcl::Request &req, CURLoption a, OptType&& optType, CURLoption b,  OptTypes&&... optTypes) {
+    void setOpts(bcl::Request *req, CURLoption a, OptType&& optType, CURLoption b,  OptTypes&&... optTypes) {
         setOpts(req, a, optType);
         setOpts(req, b, BACKCURL_FWD(optTypes)...);
     }
@@ -200,7 +200,7 @@ namespace bcl {
             req.attach_lmbdaptr() = [](void *x) {
                 bcl::Request *r = (bcl::Request*) x;
                 ReqCB *lambdaX = static_cast<ReqCB*>(r->cbPtr);
-                (*lambdaX)(*r);
+                (*lambdaX)(r);
             };
             
             bcl::FutureResp resp(new bcl::Response(reqArgs));
@@ -222,7 +222,7 @@ namespace bcl {
             req.attach_lmbdaptr() = [](void *x) {
                 bcl::Request *r = (bcl::Request*) x;
                 ReqCB *lambdaX = static_cast<ReqCB*>(r->cbPtr);
-                (*lambdaX)(*r);
+                (*lambdaX)(r);
             };
             
             UniqueResponse resp(new bcl::Response(reqArgs));
@@ -231,7 +231,7 @@ namespace bcl {
             resp->attach_lmbdaptr() = [](void *x) {
                 bcl::Response *r = (bcl::Response*) x;
                 RespCB *lambdaX = static_cast<RespCB*>(r->cbPtr);
-                (*lambdaX)(*r);
+                (*lambdaX)(r);
             };
             resp->setStreamClose([](void *x) {
                 bcl::Response *r = (bcl::Response*) x;

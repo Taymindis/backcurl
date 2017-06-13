@@ -5,11 +5,11 @@
 #include "gtest/gtest.h"
 
 
-void simpleGetOption(bcl::Request &req) {
+void simpleGetOption(bcl::Request *req) {
     bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
                  CURLOPT_FOLLOWLOCATION, 1L,
                  CURLOPT_WRITEFUNCTION, &bcl::writeContentCallback,
-                 CURLOPT_WRITEDATA, req.dataPtr,
+                 CURLOPT_WRITEDATA, req->dataPtr,
                  CURLOPT_USERAGENT, "libcurl-agent/1.0",
                  CURLOPT_RANGE, "0-200000"
                 );
@@ -18,13 +18,13 @@ void simpleGetOption(bcl::Request &req) {
 int countUI = 0;
 
 void doSync() {
-    bcl::execute<std::string>(simpleGetOption, [&](bcl::Response & resp) {
-        std::string ret =  std::string(resp.getBody<std::string>()->c_str());
+    bcl::execute<std::string>(simpleGetOption, [&](bcl::Response * resp) {
+        std::string ret =  std::string(resp->getBody<std::string>()->c_str());
         printf("Sync === %s\n", ret.c_str());
         //    return ret;
         // std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        printf("%s\n", resp.args[0].getStr);
-        printf("%ld\n", resp.args[1].getLong);
+        printf("%s\n", resp->args[0].getStr);
+        printf("%ld\n", resp->args[1].getLong);
     },bcl::args("ABCD Args", 192321839L));
 
 }
@@ -61,17 +61,17 @@ void doRunOnUI () {
     bool gui_running = true;
     std::cout << "Game is running thread: ";
 
-    bcl::executeOnUI<std::string>([](bcl::Request & req) -> void {
-        bcl::setOpts(req, CURLOPT_URL , req.args[0].getStr,
-        CURLOPT_FOLLOWLOCATION, req.args[1].getLong,
+    bcl::executeOnUI<std::string>([](bcl::Request * req) -> void {
+        bcl::setOpts(req, CURLOPT_URL , req->args[0].getStr,
+        CURLOPT_FOLLOWLOCATION, req->args[1].getLong,
         CURLOPT_WRITEFUNCTION, &bcl::writeContentCallback,
-        CURLOPT_WRITEDATA, req.dataPtr,
-        CURLOPT_USERAGENT, req.args[2].getStr,
-        CURLOPT_RANGE, req.args[3].getStr
+        CURLOPT_WRITEDATA, req->dataPtr,
+        CURLOPT_USERAGENT, req->args[2].getStr,
+        CURLOPT_RANGE, req->args[3].getStr
                     );
     },   
-    [&](bcl::Response & resp) {
-        printf("On UI === %s\n", resp.getBody<std::string>()->c_str());
+    [&](bcl::Response * resp) {
+        printf("On UI === %s\n", resp->getBody<std::string>()->c_str());
         printf("Done , stop gui running with count ui %d\n", countUI );
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
         gui_running = false;

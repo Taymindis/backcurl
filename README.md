@@ -17,16 +17,16 @@ sudo make install
 int main() {
     bcl::init(); // init when using
 
-    bcl::execute<std::string>([&](bcl::Request &req) {
+    bcl::execute<std::string>([&](bcl::Request *req) {
         bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
                  CURLOPT_FOLLOWLOCATION, 1L,
                  CURLOPT_WRITEFUNCTION, &bcl::writeContentCallback,
-                 CURLOPT_WRITEDATA, req.dataPtr,
+                 CURLOPT_WRITEDATA, req->dataPtr,
                  CURLOPT_USERAGENT, "libcurl-agent/1.0",
                  CURLOPT_RANGE, "0-200000"
                 );
-    }, [&](bcl::Response & resp) {
-        std::string ret =  std::string(resp.getBody<std::string>()->c_str());
+    }, [&](bcl::Response * resp) {
+        std::string ret =  std::string(resp->getBody<std::string>()->c_str());
         printf("Sync === %s\n", ret.c_str());
     });
 
@@ -46,12 +46,12 @@ frp = bcl::execFuture<std::string>(simpleGetOption);
 bool uiRunning = true;
 while (uiRunning)  {
     if (bcl::hasRequestedAndReady(frp)) {
-        bcl::Response r = frp.get();
-        printf("The data content is = %s\n", r.getBody<std::string>()->c_str());
-        printf("Got Http Status code = %ld\n", r.code);
-        printf("Got Content Type = %s\n", r.contentType.c_str());
-        printf("Total Time Consume = %f\n", r.totalTime);
-        printf("has Error = %s\n", !r.error.empty() ? "Yes" : "No");
+        bcl::FutureResp r = frp.get();
+        printf("The data content is = %s\n", r->getBody<std::string>()->c_str());
+        printf("Got Http Status code = %ld\n", r->code);
+        printf("Got Content Type = %s\n", r->contentType.c_str());
+        printf("Total Time Consume = %f\n", r->totalTime);
+        printf("has Error = %s\n", !r->error.empty() ? "Yes" : "No");
 
         // Exit App
         uiRunning = false;
@@ -80,16 +80,16 @@ void doRunOnUI () {
     bool gui_running = true;
     std::cout << "Game is running thread: ";
 
-    bcl::executeOnUI<std::string>([](bcl::Request & req) -> void {
+    bcl::executeOnUI<std::string>([](bcl::Request * req) -> void {
         bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
         CURLOPT_FOLLOWLOCATION, 1L,
         CURLOPT_WRITEFUNCTION, &bcl::writeContentCallback,
-        CURLOPT_WRITEDATA, req.dataPtr,
+        CURLOPT_WRITEDATA, req->dataPtr,
         CURLOPT_USERAGENT, "libcurl-agent/1.0",
         CURLOPT_RANGE, "0-200000"
                     );
-    }, [&](bcl::Response & resp) {
-        printf("On UI === %s\n", resp.getBody<std::string>()->c_str());
+    }, [&](bcl::Response * resp) {
+        printf("On UI === %s\n", resp->getBody<std::string>()->c_str());
         printf("Done , stop gui running with count ui %d\n", countUI );
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
         gui_running = false;
@@ -124,16 +124,16 @@ size_t myMemoryCallBack(void *contents, size_t size, size_t nmemb, void *content
 int main() {
     bcl::init(); // init when using
 
-    bcl::execute<myType>([&](bcl::Request &req) {
+    bcl::execute<myType>([&](bcl::Request *req) {
         bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
                  CURLOPT_FOLLOWLOCATION, 1L,
                  CURLOPT_WRITEFUNCTION, &myMemoryCallBack,
-                 CURLOPT_WRITEDATA, req.dataPtr,
+                 CURLOPT_WRITEDATA, req->dataPtr,
                  CURLOPT_USERAGENT, "libcurl-agent/1.0",
                  CURLOPT_RANGE, "0-200000"
                 );
-    }, [&](bcl::Response & resp) {
-        myType* ret =  resp.getBody<myType>();
+    }, [&](bcl::Response * resp) {
+        myType* ret =  resp->getBody<myType>();
     });
 
 
@@ -147,7 +147,7 @@ int main() {
 bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
                  CURLOPT_FOLLOWLOCATION, 1L,
                  CURLOPT_WRITEFUNCTION, &myMemoryCallBack,
-                 CURLOPT_WRITEDATA, req.dataPtr,
+                 CURLOPT_WRITEDATA, req->dataPtr,
                  CURLOPT_USERAGENT, "libcurl-agent/1.0",
                  CURLOPT_RANGE, "0-200000"
                 );
@@ -159,18 +159,18 @@ bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
 
 ## Set your http header in your request scope if needed, it is depended on libcurl CURLOPT_HTTPHEADER.
 ```cpp
-bcl::execute<myType>([&](bcl::Request &req) {
-        req.headers->emplace_back("Authorization", res::mySetting[MY_BASIC_AUTH].asString());
+bcl::execute<myType>([&](bcl::Request *req) {
+        req->headers->emplace_back("Authorization", res::mySetting[MY_BASIC_AUTH].asString());
 
         bcl::setOpts(req, CURLOPT_URL , "http://www.google.com",
                  CURLOPT_FOLLOWLOCATION, 1L,
                  CURLOPT_WRITEFUNCTION, &myMemoryCallBack,
-                 CURLOPT_WRITEDATA, req.dataPtr,
+                 CURLOPT_WRITEDATA, req->dataPtr,
                  CURLOPT_USERAGENT, "libcurl-agent/1.0",
                  CURLOPT_RANGE, "0-200000"
                 );
-    }, [&](bcl::Response & resp) {
-        myType* ret =  resp.getBody<myType>();
+    }, [&](bcl::Response * resp) {
+        myType* ret =  resp->getBody<myType>();
     });
 ```
 
@@ -190,17 +190,17 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, void *userData) {
 }
 const char *url = "http://wallpapercave.com/wp/LmOgKXz.jpg";
     char outfilename[] = "husky_dog_wallpaper.jpeg";
-    bcl::execute<MyFileAgent>([&](bcl::Request & req) -> void {
-        MyFileAgent* fAgent = (MyFileAgent*)req.dataPtr;
+    bcl::execute<MyFileAgent>([&](bcl::Request * req) -> void {
+        MyFileAgent* fAgent = (MyFileAgent*)req->dataPtr;
         fAgent->fd = fopen(outfilename, "ab+");
         bcl::setOpts(req, CURLOPT_URL,url,
         CURLOPT_WRITEFUNCTION, write_data,
-        CURLOPT_WRITEDATA, req.dataPtr,
+        CURLOPT_WRITEDATA, req->dataPtr,
         CURLOPT_FOLLOWLOCATION, 1L
                     );
-    }, [&](bcl::Response & resp) {
-        printf("Response content type = %s\n", resp.contentType.c_str());
-        fclose(resp.getBody<MyFileAgent>()->fd);
+    }, [&](bcl::Response * resp) {
+        printf("Response content type = %s\n", resp->contentType.c_str());
+        fclose(resp->getBody<MyFileAgent>()->fd);
     });
 ```
 
@@ -208,23 +208,23 @@ const char *url = "http://wallpapercave.com/wp/LmOgKXz.jpg";
 
 ## Get Image bytes into Memory
 ```cpp
-bcl::execute<bcl::MemoryByte>([](bcl::Request & req) {
+bcl::execute<bcl::MemoryByte>([](bcl::Request * req) {
     bcl::setOpts(req, CURLOPT_URL , "http://wallpapercave.com/wp/LmOgKXz.jpg",
                  CURLOPT_FOLLOWLOCATION, 1L,
                  CURLOPT_WRITEFUNCTION, &bcl::writeByteCallback,
-                 CURLOPT_WRITEDATA, req.dataPtr,
+                 CURLOPT_WRITEDATA, req->dataPtr,
                  CURLOPT_USERAGENT, "libcurl-agent/1.0",
                  CURLOPT_RANGE, "0-20000000"
                 );
-}, [&](bcl::Response & resp) {
-    printf("Downloaded content 0x%02hx\n", (const unsigned char*)resp.getBody<bcl::MemoryByte>()->c_str());
-    printf("bcl::MemoryByte size is %ld\n", resp.getBody<bcl::MemoryByte>()->size());
+}, [&](bcl::Response * resp) {
+    printf("Downloaded content 0x%02hx\n", (const unsigned char*)resp->getBody<bcl::MemoryByte>()->c_str());
+    printf("bcl::MemoryByte size is %ld\n", resp->getBody<bcl::MemoryByte>()->size());
     double dl;
-    if (!curl_easy_getinfo(resp.curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &dl)) {
+    if (!curl_easy_getinfo(resp->curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &dl)) {
         printf("Downloaded %.0f bytes\n", dl);
     }
     long headerSize;
-    if (!curl_easy_getinfo(resp.curl, CURLINFO_HEADER_SIZE, &headerSize)) {
+    if (!curl_easy_getinfo(resp->curl, CURLINFO_HEADER_SIZE, &headerSize)) {
         printf("Downloaded header size %ld bytes\n", headerSize);
     }
 });
@@ -238,18 +238,18 @@ for (std::vector<std::string>::iterator it =
      it != urls.end(); ++it) {
     std::string url = *it;
     static int count = 0;
-    bcl::executeOnUI<bcl::MemoryByte>([](bcl::Request & req) -> void {
-        log::messageln("Submitted Url is %s ", req.args[0].getStr);
-        bcl::setOpts(req, CURLOPT_URL ,req.args[0].getStr,
-                     CURLOPT_FOLLOWLOCATION, req.args[1].getLong,
+    bcl::executeOnUI<bcl::MemoryByte>([](bcl::Request * req) -> void {
+        log::messageln("Submitted Url is %s ", req->args[0].getStr);
+        bcl::setOpts(req, CURLOPT_URL ,req->args[0].getStr,
+                     CURLOPT_FOLLOWLOCATION, req->args[1].getLong,
                      CURLOPT_WRITEFUNCTION, &bcl::writeByteCallback,
-                     CURLOPT_WRITEDATA, req.dataPtr,
-                     CURLOPT_USERAGENT, req.args[2].getStr,
-                     CURLOPT_RANGE, req.args[3].getStr
+                     CURLOPT_WRITEDATA, req->dataPtr,
+                     CURLOPT_USERAGENT, req->args[2].getStr,
+                     CURLOPT_RANGE, req->args[3].getStr
                      );
-    }, [&](bcl::Response & resp) {
-        int imageCount = resp.args[4].getInt;
-        bcl::MemoryByte *byte = resp.getBody<bcl::MemoryByte>();
+    }, [&](bcl::Response * resp) {
+        int imageCount = resp->args[4].getInt;
+        bcl::MemoryByte *byte = resp->getBody<bcl::MemoryByte>();
         log::messageln("Image byte size is %lu",byte->size());
         spSprite nvgSprite = new NVGImageSprite((unsigned char*) byte->c_str(), static_cast<int>(byte->size()),  3.0f, 0);
         nvgSprite->setPosition(60 * imageCount, 60 * imageCount);
