@@ -72,7 +72,7 @@ namespace bcl {
         
         Response(bcl::Args &_args);
         
-        template <typename DataType>
+        template <typename DataType = std::string>
         inline DataType * getBody() {
             return static_cast<DataType*>((void*)__body);
         }
@@ -251,26 +251,26 @@ namespace bcl {
     writeByteCallback(void *contents, size_t size, size_t nmemb, void *userp);
     
     
-    template <typename DataType, typename ReqCB, typename RespCB>
+    template <typename DataType = std::string, typename ReqCB, typename RespCB>
     void execute(ReqCB requestCallback, RespCB responseCallback, bcl::Args args=0) {
         bcl::internal::__execute__<DataType>(std::move(requestCallback), std::move(responseCallback), internal::SYNC, std::move(args));
     }
     
-    template <typename DataType, typename ReqCB, typename RespCB>
+    template <typename DataType = std::string, typename ReqCB, typename RespCB>
     void executeAsync(ReqCB requestCallback, RespCB responseCallback, bcl::Args args=0) {
         std::async(std::launch::async, [](ReqCB requestCallback, RespCB responseCallback, bcl::Args args) {
             bcl::internal::__execute__<DataType>(std::move(requestCallback), std::move(responseCallback), internal::ASYNC_CALL, std::move(args));
         }, std::move(requestCallback), std::move(responseCallback), std::move(args) );
     }
 
-    template <typename DataType, typename ReqCB>
+    template <typename DataType = std::string, typename ReqCB>
     auto execFuture(ReqCB requestCallback, bcl::Args args =0) -> bcl::FutureResponse {
         return std::async(std::launch::async, [](ReqCB requestCallback, bcl::Args args) {
             return bcl::internal::__execute__<DataType>(std::move(requestCallback), std::move(args));
         }, std::move(requestCallback), std::move(args) );
     }
 
-    template <typename DataType, typename ReqCB, typename RespCB>
+    template <typename DataType = std::string, typename ReqCB, typename RespCB>
     void executeOnUI(ReqCB requestCallback, RespCB responseCallback, bcl::Args args = 0) {
         std::thread([](ReqCB requestCallback, RespCB responseCallback, bcl::Args args) {
             bcl::internal::__execute__<DataType>(std::move(requestCallback), std::move(responseCallback), internal::MAIN_LOOP_CALLBACK, std::move(args));

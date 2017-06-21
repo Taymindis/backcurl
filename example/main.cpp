@@ -67,6 +67,18 @@ void doAsyncPost() {
 
 
 void doSync2() {
+    bcl::execute(simpleGetOption, [&](bcl::Response * resp) {
+        std::string ret =  std::string(resp->getBody()->c_str());
+        printf("Sync === %s\n", ret.c_str());
+        //    return ret;
+        // std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        // printf("%s\n", resp->args[0].getStr);
+        printf("%ld\n", resp->args[0].getLong);
+        printf("%s\n", resp->args[1].getStr);
+    }, bcl::args(192321839L, "www.libbackcurl.com"));
+
+}
+void doSync3() {
     bcl::execute<std::string>(simpleGetOption, [&](bcl::Response * resp) {
         std::string ret =  std::string(resp->getBody<std::string>()->c_str());
         printf("Sync === %s\n", ret.c_str());
@@ -82,12 +94,12 @@ void doSync2() {
 void doFuture() {
     bcl::FutureResponse frp;
 
-    frp = bcl::execFuture<std::string>(simpleGetOption);
+    frp = bcl::execFuture(simpleGetOption);
     bool uiRunning = true;
     while (uiRunning)  {
         if (bcl::hasRequestedAndReady(frp)) {
             bcl::FutureResp r = frp.get();
-            printf("The data content is = %s\n", r->getBody<std::string>()->c_str());
+            printf("The data content is = %s\n", r->getBody()->c_str());
             printf("Got Http Status code = %ld\n", r->code);
             printf("Got Content Type = %s\n", r->contentType.c_str());
             printf("Total Time Consume = %f\n", r->totalTime);
@@ -116,24 +128,45 @@ void doUpdate() {
 void doRunOnUI () {
     bool gui_running = true;
     std::cout << "Game is running thread: ";
+    static int count = 20;
+    for (int i = 0; i < 10; i++) {
+        bcl::executeOnUI<std::string>([](bcl::Request * req) -> void {
+            bcl::setOpts(req, CURLOPT_URL , req->args[0].getStr,
+            CURLOPT_FOLLOWLOCATION, 1L,
+            CURLOPT_WRITEFUNCTION, &bcl::writeContentCallback,
+            CURLOPT_WRITEDATA, req->dataPtr,
+            CURLOPT_USERAGENT, "libcurl-agent/1.0",
+            CURLOPT_RANGE, "0-200000"
+                        );
+        },
+        [&](bcl::Response * resp) {
+            printf("On UI === %s\n", resp->getBody<std::string>()->c_str());
+            printf("Done , stop gui running with count ui %d\n", countUI );
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            count--;
+        }, bcl::args("http://www.google.com"));
+    }
 
-    bcl::executeOnUI<std::string>([](bcl::Request * req) -> void {
-        bcl::setOpts(req, CURLOPT_URL , req->args[0].getStr,
-        CURLOPT_FOLLOWLOCATION, 1L,
-        CURLOPT_WRITEFUNCTION, &bcl::writeContentCallback,
-        CURLOPT_WRITEDATA, req->dataPtr,
-        CURLOPT_USERAGENT, "libcurl-agent/1.0",
-        CURLOPT_RANGE, "0-200000"
-                    );
-    },
-    [&](bcl::Response * resp) {
-        printf("On UI === %s\n", resp->getBody<std::string>()->c_str());
-        printf("Done , stop gui running with count ui %d\n", countUI );
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-        gui_running = false;
-    }, bcl::args("http://www.google.com"));
+    for (int x = 0; x < 10; x++) {
+        bcl::executeOnUI([](bcl::Request * req) -> void {
+            bcl::setOpts(req, CURLOPT_URL , req->args[0].getStr,
+            CURLOPT_FOLLOWLOCATION, 1L,
+            CURLOPT_WRITEFUNCTION, &bcl::writeContentCallback,
+            CURLOPT_WRITEDATA, req->dataPtr,
+            CURLOPT_USERAGENT, "libcurl-agent/1.0",
+            CURLOPT_RANGE, "0-200000"
+                        );
+        },
+        [&](bcl::Response * resp) {
+            printf("On UI === %s\n", resp->getBody()->c_str());
+            printf("Done , stop gui running with count ui %d\n", countUI );
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            // gui_running = false;
+            count--;
+        }, bcl::args("http://www.google.com"));
+    }
 
-    while (gui_running) {
+    while (gui_running && count >0) {
         doGuiWork();
         doUpdate();
         std::this_thread::sleep_for(std::chrono::milliseconds(1000 / 16));
@@ -210,6 +243,7 @@ int main()
 
     doSync();
     doSync2();
+    doSync3();
     doAsyncPost();
     doFuture();
     doRunOnUI();
