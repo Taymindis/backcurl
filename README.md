@@ -2,7 +2,7 @@
 C++, pure libcurl based with customized set_easy_opt for different kind of requests for Mobile, NON BLOCK UI SYNC http request.
 
 
-
+### Run All the tests and mobile development build, if you do not need mobile development build, please go for second option.
 ```
 cd build
 cmake ..
@@ -11,6 +11,15 @@ ctest -VV
 sudo make install
 ```
 
+### Skip all the tests and mobile development build, just install backcurl core lib into system
+```
+cd backcurl-core
+mkdir build
+cd build
+cmake ..
+make
+sudo make install
+```
 
 
 ```cpp
