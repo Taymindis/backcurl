@@ -20,7 +20,7 @@ namespace bcl {
             bcl::UniqueResponse response = std::move(internal::_mainLoopTasks.front());
             internal::_mainLoopTasks.pop_front();
             
-            // unlock during the individual task ?
+            // unlock during the individual task
             lock.unlock();
             response->callBack(&(*response));
             lock.lock();
