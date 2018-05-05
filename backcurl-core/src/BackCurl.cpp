@@ -15,14 +15,15 @@ namespace bcl {
     }
     
     void LoopBackFire() {
+        std::unique_lock<std::mutex> lock(internal::_tasks_mutex);
         while (!internal::_mainLoopTasks.empty()) {
             bcl::UniqueResponse response = std::move(internal::_mainLoopTasks.front());
             internal::_mainLoopTasks.pop_front();
             
-            // lock during the task?
-            internal::_tasks_mutex.lock();
+            // unlock during the individual task ?
+            lock.unlock();
             response->callBack(&(*response));
-            internal::_tasks_mutex.unlock();
+            lock.lock();
         }
     }
     
